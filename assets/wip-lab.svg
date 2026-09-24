@@ -1,13 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" role="img" aria-label="The optimization lab is still being built">
-  <!-- placeholder illustration. Replace with the designed art (see agent-notes/dashboard-design-handoff.md). -->
-  <style>.b{fill:#e09a00;stroke:#1e2a36;stroke-width:1;animation:t 2.6s ease-in-out infinite}.b:nth-child(even){animation-delay:1.3s}@keyframes t{50%{fill:#ffd36b}}@media (prefers-reduced-motion:reduce){.b{animation:none}}</style>
-  <path d="M20 172h280" stroke="#c5cbd3" stroke-width="2" stroke-linecap="round"/>
-  <path d="M36 58 Q160 22 284 58" fill="none" stroke="#4a5563" stroke-width="1.5"/>
-  <g><circle class="b" cx="68" cy="49" r="5"/><circle class="b" cx="104" cy="40" r="5"/><circle class="b" cx="140" cy="36" r="5"/><circle class="b" cx="180" cy="36" r="5"/><circle class="b" cx="216" cy="40" r="5"/><circle class="b" cx="252" cy="49" r="5"/></g>
-  <rect x="95" y="96" width="130" height="76" rx="3" fill="#ffffff" stroke="#1e2a36" stroke-width="2"/>
-  <path d="M85 96h150l-12-22H97z" fill="#1e2a36"/>
-  <path d="M109 74l-4 22M133 74l-2 22M157 74v22M181 74l2 22M205 74l4 22" stroke="#e09a00" stroke-width="5"/>
-  <rect x="114" y="122" width="92" height="22" rx="3" fill="#e09a00"/>
-  <text x="160" y="137" text-anchor="middle" font-family="Archivo, system-ui, sans-serif" font-size="11" font-weight="700" fill="#1e2a36">Work in progress</text>
-  <g transform="translate(250 120)"><path d="M0 52 L14 0 L28 52z" fill="#e09a00" stroke="#1e2a36" stroke-width="1.5"/><path d="M6 34h16M9.5 20h9" stroke="#1e2a36" stroke-width="4"/><rect x="-6" y="50" width="40" height="5" rx="2" fill="#1e2a36"/></g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-label="A market stall and planning table with a river map, bus route, and setup barriers">
+  <defs>
+    <g id="bulb"><path d="M0 0v8" fill="none" stroke="#1E2A36" stroke-width="2"/><circle cy="14" r="6" fill="#E09A00" stroke="#1E2A36" stroke-width="2"/><circle cx="-2" cy="12" r="1.5" fill="#FFD36B"/></g>
+    <g id="stall" stroke="#1E2A36" stroke-width="2" stroke-linejoin="round">
+      <rect x="0" y="0" width="178" height="136" fill="#FFFFFF"/>
+      <path d="M0 0 22-36h134l22 36z" fill="#FFFFFF"/>
+      <path d="M0 0 22-36h27L36 0zM72 0l7-36h25l3 36zM143 0l-14-36h27l22 36z" fill="#E09A00"/>
+      <path d="M0 0q9 13 18 0 9 13 18 0 9 13 18 0 9 13 18 0 9 13 18 0 9 13 18 0 9 13 18 0 9 13 18 0 9 13 18 0 9 13 18 0" fill="none"/>
+      <path d="M12 14v122m154-122v122M16 107h146" fill="none"/>
+      <rect x="29" y="74" width="117" height="30" rx="2" fill="#CDE2FB"/>
+      <path d="M29 84h117" fill="none"/>
+    </g>
+    <g id="cone" stroke="#1E2A36" stroke-width="2" stroke-linejoin="round"><path d="M0 47 16 0l16 47z" fill="#E09A00"/><path d="M8 24h16l5 15H3z" fill="#FFFFFF"/><rect x="-6" y="47" width="44" height="5" rx="2" fill="#1E2A36"/></g>
+  </defs>
+  <g fill="none" stroke="#1E2A36" stroke-width="2" stroke-linecap="round"><path d="M38 72Q320 170 602 72"/><path d="M38 72v264M602 72v264"/></g>
+  <g><use href="#bulb" x="95" y="91"/><use href="#bulb" x="170" y="110"/><use href="#bulb" x="245" y="122"/><use href="#bulb" x="320" y="126"/><use href="#bulb" x="395" y="122"/><use href="#bulb" x="470" y="110"/><use href="#bulb" x="545" y="91"/></g>
+  <use href="#stall" x="92" y="174"/>
+  <g stroke="#1E2A36" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M300 270h225l-13 20H313z" fill="#FFFFFF"/>
+    <path d="M322 289v47m178-47v47M352 289l-19 47m137-47 20 47" fill="none"/>
+    <path d="M325 210 480 200l30 65-160 12z" fill="#FFFFFF"/>
+    <path d="M366 218q34 22 57 16 22-6 57-28M422 234q-13 12-10 36M422 234q28 4 65 27" fill="none" stroke="#3987E5" stroke-width="7"/>
+    <path d="M348 227q18 2 28 10m-13 24 24-9m57 11 21-17" fill="none" stroke="#CDE2FB"/>
+    <path d="M361 239q4-8 8 0 2 5-4 11-7-7-4-11zM452 217q4-8 8 0 2 5-4 11-7-7-4-11zM462 250q4-8 8 0 2 5-4 11-7-7-4-11z" fill="#E09A00"/>
+    <path d="m492 211 20 43 5-3-20-43z" fill="#E09A00"/>
+    <path d="m512 254 5-3 2 10z" fill="#FFFFFF"/>
+  </g>
+  <use href="#cone" x="539" y="282"/>
+  <g fill="none" stroke="#1E2A36" stroke-width="2" stroke-linecap="round"><path d="M65 336h530M65 298h61l8 38m-8-38-8 38M65 298l-8 38"/></g>
+  <path d="M68 298h58l-4 11H72z" fill="#E09A00" stroke="#1E2A36" stroke-width="2"/>
 </svg>
