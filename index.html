@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pittsburgh Night Market Explorer</title>
+  <meta name="description" content="Where should Pittsburgh's next night market pop up? Spending, footfall, bus traffic and past markets by neighborhood.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+</head>
+<body>
+  <header class="masthead">
+    <div class="headline">
+      <p class="byline">
+        <img class="mark" src="assets/mark.svg" alt="" width="30" height="30">
+        <span><strong>CMU From Data to Action F26</strong> <span class="team">by Dominick, Nate, Rizaldy and Sean</span></span>
+      </p>
+      <h1>Where should Pittsburgh's next night market pop up?</h1>
+      <p class="dek" id="dek">Spending, footfall and bus traffic by neighborhood, with every night market scheduled since 2023. Drag the string of lights to move through the months.</p>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Dashboard sections">
+      <button role="tab" id="tab-btn-explore" aria-controls="tab-explore" aria-selected="true" data-tab="explore">Explore</button>
+      <button role="tab" id="tab-btn-lab" aria-controls="tab-lab" aria-selected="false" data-tab="lab">Optimization lab</button>
+      <button role="tab" id="tab-btn-results" aria-controls="tab-results" aria-selected="false" data-tab="results">Recommendation</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-explore" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-explore">
+      <div class="filters">
+        <div class="segmented" id="layer-picker" role="group" aria-label="Color the map by"></div>
+        <label class="select">
+          Bus day
+          <select id="day-type">
+            <option value="SAT.">Saturday</option>
+            <option value="WEEKDAY">Weekday</option>
+            <option value="SUN.">Sunday</option>
+          </select>
+        </label>
+        <label class="toggle"><input type="checkbox" id="stops-toggle"> Show bus stops</label>
+      </div>
+
+      <div class="explore-grid">
+        <div class="map-col">
+          <div class="map-frame">
+            <div id="map" aria-label="Map of Pittsburgh neighborhoods"></div>
+            <div class="legend" id="legend"></div>
+          </div>
+
+          <div class="timeline">
+            <button id="play" class="play" type="button" aria-label="Play through the months">
+              <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path id="play-icon" d="M4 2.5v11l9-5.5z"/></svg>
+            </button>
+            <div class="lights">
+              <svg id="lights" aria-hidden="true"></svg>
+              <input type="range" id="month" min="0" max="0" step="1" aria-label="Month">
+            </div>
+            <output id="month-label" for="month" aria-live="polite"></output>
+          </div>
+        </div>
+
+        <aside class="panel">
+          <section class="block selection">
+            <div class="sel-head">
+              <h2 id="sel-name">City of Pittsburgh</h2>
+              <button id="clear-sel" class="link" type="button" hidden>Show whole city</button>
+            </div>
+            <p class="sub" id="sel-sub"></p>
+            <dl class="stats" id="sel-stats"></dl>
+          </section>
+
+          <section class="block">
+            <h3>Spending</h3>
+            <p class="sub">Card spend each month at restaurants, cafés and grocers. <span class="bulb-key"></span> a market ran that month.</p>
+            <div class="chart" id="chart-spend"></div>
+            <p class="note">December 2025 is about 2.6 times the months around it while visits stay flat. That looks like a change in the Dewey data, not real spending, and is being checked.</p>
+            <details class="table-view"><summary>See the numbers</summary><div id="table-spend"></div></details>
+          </section>
+
+          <section class="block">
+            <h3>Footfall</h3>
+            <p class="sub">Visits each month to places in the area. <span class="bulb-key"></span> a market ran that month.</p>
+            <div class="chart" id="chart-visits"></div>
+            <details class="table-view"><summary>See the numbers</summary><div id="table-visits"></div></details>
+          </section>
+
+          <section class="block">
+            <h3>Bus traffic</h3>
+            <p class="sub" id="transit-sub"></p>
+            <div class="chart" id="chart-transit"></div>
+            <p class="note" id="transit-note"></p>
+          </section>
+
+          <section class="block">
+            <h3>Night markets so far</h3>
+            <p class="sub">Series on the calendar since 2023. <span class="bulb-key"></span> on this month.</p>
+            <ul class="markets" id="market-list"></ul>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+    <section id="tab-lab" class="tab-panel wip" role="tabpanel" aria-labelledby="tab-btn-lab" hidden>
+      <img class="wip-art" src="assets/wip-lab.svg" alt="A market stall under a string of lights with a work-in-progress sign" width="340" height="212">
+      <h2>The optimization lab is still being built</h2>
+      <p>You'll be able to pick the neighborhoods, districts or months you care about and re-run the model to see where markets should go.</p>
+    </section>
+
+    <section id="tab-results" class="tab-panel wip" role="tabpanel" aria-labelledby="tab-btn-results" hidden>
+      <img class="wip-art" src="assets/wip-results.svg" alt="A market stall under a string of lights with a work-in-progress sign" width="340" height="212">
+      <h2>The recommendation comes after the model runs</h2>
+      <p>This tab will show which neighborhoods and dates the model picks, and how often they stay picked when the assumptions change.</p>
+    </section>
+  </main>
+
+  <footer class="colophon">
+    <p>Made by Dominick, Nate, Rizaldy and Sean for CMU From Data to Action, Fall 2026.</p>
+    <p id="sources"></p>
+    <p>Dewey spend and visits appear only as neighborhood and city totals per month. Market pins sit at the middle of the neighborhood, not at the exact venue.</p>
+  </footer>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
+  <script src="app.js"></script>
+</body>
+</html>
