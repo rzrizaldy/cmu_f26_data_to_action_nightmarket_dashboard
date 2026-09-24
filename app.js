@@ -46,15 +46,15 @@ const state = { month: 0, layer: "spend", dayType: "SAT.", hood: null, playing: 
 let D; // all data
 
 async function load() {
-  const names = ["neighborhoods.geojson", "spend_month.json", "visits_month.json", "transit_month.json", "stops.json", "events.json", "meta.json"];
-  const [geo, spend, visits, transit, stops, events, meta] = await Promise.all(
+  const names = ["neighborhoods.geojson", "spend_month.json", "visits_month.json", "transit_month.json", "stops.json", "events.json", "meta.json", "routes.json"];
+  const [geo, spend, visits, transit, stops, events, meta, routes] = await Promise.all(
     names.map((n) => fetch(`data/${n}`).then((r) => { if (!r.ok) throw new Error(`${n}: ${r.status}`); return r.json(); })),
   );
   const months = spend.months;
   const props = Object.fromEntries(geo.features.map((f) => [f.properties.id, f.properties]));
   const lastTransit = months.indexOf(meta.ridership_last_month);
   for (const e of events) e.month = e.date.slice(0, 7);
-  return { geo, spend, visits, transit, stops, events, meta, months, props, lastTransit };
+  return { geo, spend, visits, transit, stops, events, meta, routes, months, props, lastTransit };
 }
 
 /* ---------- layers ---------- */
@@ -137,7 +137,7 @@ function styleHood(layer) {
   const selected = state.hood === h;
   layer.setStyle({
     fillColor: v == null ? "url(#nodata)" : C.ramp[binOf(v, cuts)],
-    fillOpacity: v == null ? 1 : 0.85,
+    fillOpacity: v == null ? 1 : state.layer === "transit" ? 0.35 : 0.85,
     weight: selected ? 3 : 0.8,
     color: selected ? C.ink : C.surface,
   });
@@ -156,6 +156,7 @@ function hoodTip(h) {
 function renderMap() {
   hoodLayer.eachLayer(styleHood);
   renderMarkets();
+  renderFlow();
   renderLegend();
 }
 
@@ -170,6 +171,14 @@ function renderLegend() {
     el("span", {}, (() => { const i = el("i"); i.style.background = C.pop; i.style.boxShadow = `0 0 0 1.5px ${C.ink}`; return i; })(), "market this month"),
     el("span", {}, (() => { const i = el("i"); i.style.background = C.surface; i.style.boxShadow = `0 0 0 1.5px ${C.ink}`; return i; })(), "earlier market"),
   );
+  if (state.layer === "transit") {
+    const line = el("i", { class: "swatch-line" });
+    const bus = el("i", { class: "swatch-bus" });
+    extra.prepend(
+      el("span", {}, line, "route, wider = more riders"),
+      el("span", {}, bus, reduceMotion ? `bus dot = ${full(RIDERS_PER_DOT)} daily riders` : `moving dot = ${full(RIDERS_PER_DOT)} daily riders`),
+    );
+  }
   box.replaceChildren(el("div", { class: "legend-title", text: title }), scale, labels, extra);
 }
 
@@ -212,6 +221,118 @@ function renderMarkets() {
     marker.bindTooltip(tipNode(s.name, active ? `On ${dates}` : dates, `${s.neighborhood}, ${classLabel(s.cls)}`), { direction: "top" });
     marker.on("click", () => select(s.hood));
     marketLayer.addLayer(marker);
+  }
+}
+
+/* ---------- bus flow: route lines + moving buses (Bus traffic layer) ---------- */
+
+const RIDERS_PER_DOT = 1000; // one moving dot per 1,000 average daily riders on the route
+const BUS_SPEED_KM_S = 0.6; // animation speed, not real bus speed
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let routeLayer, busCanvas, busCtx, flowFrame = null;
+
+const kmBetween = ([aLat, aLon], [bLat, bLon]) => {
+  const dy = (bLat - aLat) * 111.32;
+  const dx = (bLon - aLon) * 111.32 * Math.cos(((aLat + bLat) / 2) * (Math.PI / 180));
+  return Math.hypot(dx, dy);
+};
+
+function routeRiders(r) {
+  return r.riders[state.dayType][transitIndex(state.month)];
+}
+
+function routeName(r) {
+  const rail = { RED: "Red Line (T)", BLUE: "Blue Line (T)", SLVR: "Silver Line (T)" };
+  if (rail[r.id]) return rail[r.id];
+  if (r.mode === "incline") return r.name;
+  return r.name ? `${r.id} ${r.name}` : `Route ${r.id}`;
+}
+
+function initFlow() {
+  map.createPane("routes").style.zIndex = 420;
+  const buses = map.createPane("buses");
+  buses.style.zIndex = 430;
+  buses.style.pointerEvents = "none";
+  const renderer = L.svg({ pane: "routes", padding: 0.3 });
+  routeLayer = L.layerGroup();
+  for (const r of D.routes.routes) {
+    r.cum = [0];
+    for (let k = 1; k < r.coords.length; k++) r.cum.push(r.cum[k - 1] + kmBetween(r.coords[k - 1], r.coords[k]));
+    r.length = r.cum[r.cum.length - 1];
+    r.line = L.polyline(r.coords, { renderer, pane: "routes", color: C.ink, opacity: 0.5, weight: 1, lineCap: "round", lineJoin: "round" });
+    r.line.bindTooltip(() => {
+      const v = routeRiders(r);
+      return tipNode(routeName(r), v == null ? "No ridership data" : `${full(v)} daily riders`, `Average ${dayName()}, ${monthLabel(D.months[transitIndex(state.month)])}`);
+    }, { sticky: true, direction: "top" });
+    r.line.on("mouseover", () => { r.line.setStyle({ opacity: 0.9 }); r.line.bringToFront(); });
+    r.line.on("mouseout", () => { r.line.setStyle({ opacity: routeRiders(r) ? 0.38 : 0.15 }); r.line.closeTooltip(); });
+    routeLayer.addLayer(r.line);
+  }
+  busCanvas = L.DomUtil.create("canvas", "bus-canvas", buses);
+  busCtx = busCanvas.getContext("2d");
+  map.on("move zoom resize", () => { if (state.layer === "transit" && !flowFrame) drawBuses(0); });
+}
+
+function renderFlow() {
+  const on = state.layer === "transit";
+  if (!on) {
+    routeLayer.remove();
+    if (flowFrame) cancelAnimationFrame(flowFrame);
+    flowFrame = null;
+    busCtx.clearRect(0, 0, busCanvas.width, busCanvas.height);
+    return;
+  }
+  const max = Math.max(...D.routes.routes.map((r) => routeRiders(r) ?? 0));
+  for (const r of D.routes.routes) {
+    const v = routeRiders(r);
+    r.line.setStyle({ weight: v ? 0.75 + 5.5 * Math.sqrt(v / max) : 0.5, opacity: v ? 0.38 : 0.15 });
+  }
+  if (!map.hasLayer(routeLayer)) routeLayer.addTo(map);
+  if (reduceMotion) { drawBuses(0); return; }
+  if (!flowFrame) {
+    const tick = (ts) => { drawBuses(ts); flowFrame = requestAnimationFrame(tick); };
+    flowFrame = requestAnimationFrame(tick);
+  }
+}
+
+function pointAlong(r, km) {
+  let lo = 0, hi = r.cum.length - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (r.cum[mid] <= km) lo = mid; else hi = mid; }
+  const span = r.cum[hi] - r.cum[lo] || 1;
+  const t = (km - r.cum[lo]) / span;
+  const [aLat, aLon] = r.coords[lo], [bLat, bLon] = r.coords[hi];
+  return [aLat + (bLat - aLat) * t, aLon + (bLon - aLon) * t];
+}
+
+function drawBuses(ts) {
+  const size = map.getSize();
+  const ratio = window.devicePixelRatio || 1;
+  if (busCanvas.width !== size.x * ratio || busCanvas.height !== size.y * ratio) {
+    busCanvas.width = size.x * ratio;
+    busCanvas.height = size.y * ratio;
+    busCanvas.style.width = `${size.x}px`;
+    busCanvas.style.height = `${size.y}px`;
+  }
+  L.DomUtil.setPosition(busCanvas, map.containerPointToLayerPoint([0, 0]));
+  busCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  busCtx.clearRect(0, 0, size.x, size.y);
+  busCtx.lineWidth = 1.25;
+  busCtx.strokeStyle = C.ink;
+  busCtx.fillStyle = C.surface;
+  const travelled = (ts / 1000) * BUS_SPEED_KM_S;
+  for (const r of D.routes.routes) {
+    const v = routeRiders(r);
+    if (!v || r.length === 0) continue;
+    const n = Math.max(1, Math.round(v / RIDERS_PER_DOT));
+    for (let k = 0; k < n; k++) {
+      const km = (travelled + (k * r.length) / n) % r.length;
+      const p = map.latLngToContainerPoint(pointAlong(r, km));
+      if (p.x < -5 || p.y < -5 || p.x > size.x + 5 || p.y > size.y + 5) continue;
+      busCtx.beginPath();
+      busCtx.arc(p.x, p.y, 2.75, 0, Math.PI * 2);
+      busCtx.fill();
+      busCtx.stroke();
+    }
   }
 }
 
@@ -500,6 +621,7 @@ load()
     const lastMarket = D.events.map((e) => e.month).filter((m) => D.months.includes(m)).sort().pop();
     state.month = D.months.indexOf(lastMarket);
     initMap();
+    initFlow();
     initControls();
     renderFooter();
     renderAll();
