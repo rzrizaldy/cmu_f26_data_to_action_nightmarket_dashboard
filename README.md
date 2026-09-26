@@ -23,4 +23,6 @@ Made by Dominick, Nate, Rizaldy and Sean for **CMU From Data to Action, Fall 202
 
 Market pins sit at the middle of each neighborhood, not at the exact venue. Basemap © Esri.
 
+Monthly footfall is built from the reconciled neighborhood-day visit fact; unique-place counts still come from place-day rows. Evening footfall is an estimate where hourly data are available.
+
 This repository is generated from the `dashboard/` folder of the team's private working repo. Change things there, then publish. Edits made directly here are overwritten.
