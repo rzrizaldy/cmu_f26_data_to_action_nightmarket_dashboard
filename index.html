@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2026-09-28b">
   <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
 </head>
 <body>
@@ -32,16 +32,17 @@
   <main>
     <section id="tab-explore" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-explore">
       <div class="filters">
-        <div class="segmented" id="layer-picker" role="group" aria-label="Color the map by"></div>
-        <label class="select">
-          Bus day
-          <select id="day-type">
-            <option value="SAT.">Saturday</option>
-            <option value="WEEKDAY">Weekday</option>
-            <option value="SUN.">Sunday</option>
-          </select>
-        </label>
-        <label class="toggle"><input type="checkbox" id="stops-toggle"> Show bus stops</label>
+        <span class="filter-label" id="layer-label">Color the map by</span>
+        <div class="segmented" id="layer-picker" role="group" aria-labelledby="layer-label"></div>
+        <div class="bus-context" id="bus-context" hidden>
+          <span class="filter-label" id="day-label">on an average</span>
+          <div class="segmented" id="day-picker" role="group" aria-labelledby="day-label">
+            <button type="button" data-day="WEEKDAY" aria-pressed="false">weekday</button>
+            <button type="button" data-day="SAT." aria-pressed="true">Saturday</button>
+            <button type="button" data-day="SUN." aria-pressed="false">Sunday</button>
+          </div>
+          <label class="toggle"><input type="checkbox" id="stops-toggle"> stops</label>
+        </div>
       </div>
 
       <div class="explore-grid">
@@ -69,27 +70,27 @@
               <h2 id="sel-name">City of Pittsburgh</h2>
               <button id="clear-sel" class="link" type="button" hidden>Show whole city</button>
             </div>
-            <p class="sub" id="sel-sub"></p>
+            <p class="lede" id="sel-lede"></p>
             <dl class="stats" id="sel-stats"></dl>
           </section>
 
           <section class="block">
             <h3>Spending</h3>
-            <p class="sub">Card spend each month at restaurants, cafés and grocers. <span class="bulb-key"></span> a market ran that month.</p>
+            <p class="sub">Card spend per month at restaurants, cafés and grocers. <span class="bulb-key"></span> months with a night market.</p>
             <div class="chart" id="chart-spend"></div>
-            <p class="note">December 2025 is about 2.6 times the months around it while visits stay flat. That looks like a change in the Dewey data, not real spending, and is being checked.</p>
+            <p class="note">December 2025 is corrected: the data provider counted most card transactions twice that month.</p>
             <details class="table-view"><summary>See the numbers</summary><div id="table-spend"></div></details>
           </section>
 
           <section class="block">
             <h3>Footfall</h3>
-            <p class="sub">Visits each month to places in the area. <span class="bulb-key"></span> a market ran that month.</p>
+            <p class="sub">Visits per month to places in the area. <span class="bulb-key"></span> months with a night market.</p>
             <div class="chart" id="chart-visits"></div>
             <details class="table-view"><summary>See the numbers</summary><div id="table-visits"></div></details>
           </section>
 
           <section class="block">
-            <h3>Bus traffic</h3>
+            <h3>Bus riders</h3>
             <p class="sub" id="transit-sub"></p>
             <div class="chart" id="chart-transit"></div>
             <p class="note" id="transit-note"></p>
@@ -97,7 +98,7 @@
 
           <section class="block">
             <h3>Night markets so far</h3>
-            <p class="sub">Series on the calendar since 2023. <span class="bulb-key"></span> on this month.</p>
+            <p class="sub">Every series on the calendar since 2023. <span class="bulb-key"></span> on this month.</p>
             <ul class="markets" id="market-list"></ul>
           </section>
         </aside>
@@ -127,6 +128,6 @@
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=2026-09-28b"></script>
 </body>
 </html>

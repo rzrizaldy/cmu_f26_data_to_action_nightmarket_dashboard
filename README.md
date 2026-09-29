@@ -15,7 +15,7 @@ Made by Dominick, Nate, Rizaldy and Sean for **CMU From Data to Action, Fall 202
 
 `data/` holds only aggregates, built from the project's private data mart:
 
-- Dewey / Advan spend patterns and Weekly Patterns Plus, **licensed**, published only as neighborhood and city totals per month
+- Dewey / Advan spend patterns and Weekly Patterns Plus, **licensed**, published only as neighborhood and city totals per month. December 2025 spend is corrected for card transactions the provider counted twice
 - Pittsburgh Regional Transit ridership and GTFS stops
 - WPRDC neighborhood boundaries
 - UCSUR *Profiles of Change 2014–2024* (ACS 5-year) population

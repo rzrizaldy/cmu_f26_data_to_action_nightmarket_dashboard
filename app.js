@@ -42,13 +42,14 @@ function tipNode(title, value, label) {
   return el("div", {}, el("div", { class: "tip-label", text: title }), el("div", { class: "tip-value", text: value }), label ? el("div", { class: "tip-label", text: label }) : null);
 }
 
+const DATA_VERSION = "2026-09-28"; // bump when dashboard/data changes, so browsers refetch
 const state = { month: 0, layer: "spend", dayType: "SAT.", hood: null, playing: null };
 let D; // all data
 
 async function load() {
   const names = ["neighborhoods.geojson", "spend_month.json", "visits_month.json", "transit_month.json", "stops.json", "events.json", "meta.json", "routes.json"];
   const [geo, spend, visits, transit, stops, events, meta, routes] = await Promise.all(
-    names.map((n) => fetch(`data/${n}`).then((r) => { if (!r.ok) throw new Error(`${n}: ${r.status}`); return r.json(); })),
+    names.map((n) => fetch(`data/${n}?v=${DATA_VERSION}`).then((r) => { if (!r.ok) throw new Error(`${n}: ${r.status}`); return r.json(); })),
   );
   const months = spend.months;
   const props = Object.fromEntries(geo.features.map((f) => [f.properties.id, f.properties]));
@@ -64,12 +65,12 @@ const LAYERS = {
   visits: { label: "Footfall", legend: "Visits this month", fmt: count, get: (h, i) => D.visits.by_hood[h].visits[i] },
   evening: { label: "Evening footfall", legend: "Visits between 5 and 10 pm this month (estimate)", fmt: count, get: (h, i) => D.visits.by_hood[h].evening_visits[i] },
   transit: {
-    label: "Bus traffic",
+    label: "Bus riders",
     legend: () => `Riders on buses that stop here, average ${dayName()}`,
     fmt: count,
     get: (h, i) => D.transit.by_hood[h][state.dayType][transitIndex(i)],
   },
-  density: { label: "Population density", legend: "People per km², 2020–24", fmt: (n) => (n == null ? "–" : full(n)), get: (h) => D.props[h].density_per_sqkm, static: true },
+  density: { label: "Residents", legend: "Residents per km², 2020–24", fmt: (n) => (n == null ? "–" : full(n)), get: (h) => D.props[h].density_per_sqkm, static: true },
 };
 const dayName = () => ({ "SAT.": "Saturday", "SUN.": "Sunday", WEEKDAY: "weekday" })[state.dayType];
 const transitIndex = (i) => Math.min(i, D.lastTransit);
@@ -365,22 +366,44 @@ function renderSelection() {
   const p = h ? D.props[h] : null;
   document.getElementById("sel-name").textContent = p ? p.name : "City of Pittsburgh";
   document.getElementById("clear-sel").hidden = !h;
-  document.getElementById("sel-sub").textContent = h ? `${monthLabel(D.months[i])}. Click another neighborhood to compare.` : `${monthLabel(D.months[i])}. Click a neighborhood on the map to see it here.`;
+  document.getElementById("sel-lede").replaceChildren(...lede(h, i, s));
 
   const cityPop = Object.values(Object.fromEntries(Object.values(D.props).filter((x) => x.population != null).map((x) => [x.population_profile, x.population]))).reduce((a, b) => a + b, 0);
   const popValue = p ? (p.population == null ? "–" : full(p.population)) : full(cityPop);
   const popFoot = p ? (p.population == null ? "not reported" : p.combined_profile ? `counted with ${p.population_profile}` : "2020–24") : "2020–24";
-  const transitValue = h ? D.transit.by_hood[h][state.dayType][transitIndex(i)] : null;
-  const hosted = D.events.filter((e) => !h || e.neighborhood_id === h).length;
 
   document.getElementById("sel-stats").replaceChildren(
-    stat("Population", popValue, popFoot),
-    stat("Card spend", money(s.spend[i]), s.spendPlaces[i] ? `at ${full(s.spendPlaces[i])} places` : "no places in the data"),
-    stat("Visits", count(s.visits[i]), s.visitPlaces[i] ? `to ${full(s.visitPlaces[i])} places` : "no places in the data"),
-    stat("Evening share", pct(s.evening[i]), "of time spent, 5 to 10 pm"),
-    stat(`Bus riders, ${dayName()}`, h ? count(transitValue) : "–", h ? `${D.transit.routes[h]} routes stop here` : "pick a neighborhood"),
-    stat("Market nights", `${hosted}`, "on the calendar, 2023–26"),
+    stat("Card spend", money(s.spend[i]), s.spendPlaces[i] ? `${full(s.spendPlaces[i])} places` : "no places in the data"),
+    stat("Visits", count(s.visits[i]), s.visitPlaces[i] ? `${full(s.visitPlaces[i])} places` : "no places in the data"),
+    stat("Evening", pct(s.evening[i]), "of time, 5–10 pm"),
+    stat("Residents", popValue, popFoot),
   );
+}
+
+// one plain sentence that answers "what is this place like this month?"
+function lede(h, i, s) {
+  const b = (t) => el("b", { text: t });
+  const month = monthLabel(D.months[i]);
+  const parts = [];
+  if (!h) {
+    const n = D.events.filter((e) => e.month === D.months[i]).length;
+    parts.push(`In ${month}, Pittsburgh's restaurants and grocers took `, b(money(s.spend[i])), " in card spend, and people made ",
+      b(count(s.visits[i])), " visits, ", b(pct(s.evening[i])), " of that time in the evening. ",
+      n ? `${n} night market${n > 1 ? "s were" : " was"} on the calendar. ` : "No night market was on the calendar. ",
+      "Click a neighborhood to compare.");
+    return parts;
+  }
+  const p = D.props[h];
+  const hosted = D.events.filter((e) => e.neighborhood_id === h).length;
+  const riders = D.transit.by_hood[h][state.dayType][transitIndex(i)];
+  parts.push(`${month}: `);
+  if (s.spend[i] != null) parts.push(b(money(s.spend[i])), " card spend and ");
+  parts.push(b(count(s.visits[i])), " visits");
+  if (s.evening[i] != null) parts.push(", ", b(pct(s.evening[i])), " of the time in the evening");
+  parts.push(". ");
+  if (riders) parts.push("Buses stopping here carry ", b(count(riders)), ` riders on an average ${dayName()}. `);
+  parts.push(hosted ? `${p.name} has hosted ${hosted} market night${hosted > 1 ? "s" : ""} since 2023.` : "No night market has been held here yet.");
+  return parts;
 }
 
 function lineChart(id, values, format, label) {
@@ -401,7 +424,8 @@ function lineChart(id, values, format, label) {
       Plot.ruleY([0], { stroke: C.axis }),
       Plot.ruleX([now], { stroke: C.ink, strokeOpacity: 0.35 }),
       Plot.lineY(data, { x: "date", y: "value", stroke: C.series, strokeWidth: 2, curve: "monotone-x" }),
-      Plot.dot(markets, { x: "date", y: "value", r: 4.5, fill: C.pop, stroke: C.ink, strokeWidth: 1.2 }),
+      Plot.dot(markets, { x: "date", y: 0, r: 3.5, fill: C.pop, stroke: C.ink, strokeWidth: 1 }),
+      ...(id === "chart-spend" ? decemberNote(data) : []),
       Plot.ruleX(data, Plot.pointerX({ x: "date", stroke: C.muted })),
       Plot.tip(data, Plot.pointerX({
         x: "date", y: "value",
@@ -411,6 +435,18 @@ function lineChart(id, values, format, label) {
     ],
   });
   box.replaceChildren(plot);
+}
+
+// annotate the corrected month directly on the spending chart
+function decemberNote(data) {
+  const dec = data.find((d) => d.month === "2025-12");
+  if (!dec) return [];
+  const raw = !state.hood && D.spend.city_raw ? D.spend.city_raw[D.months.indexOf("2025-12")] : null;
+  const text = raw ? `Dec 2025 corrected\n(reported ${money(raw)})` : "Dec 2025 corrected";
+  return [
+    Plot.dot([dec], { x: "date", y: "value", r: 3, fill: C.surface, stroke: C.ink, strokeWidth: 1.2 }),
+    Plot.text([dec], { x: "date", y: "value", text: () => text, dy: -14, textAnchor: "end", dx: -4, fill: C.ink2, fontSize: 10.5, lineHeight: 1.15 }),
+  ];
 }
 
 function tableView(id, columns) {
@@ -560,12 +596,21 @@ function initControls() {
     b.addEventListener("click", () => {
       state.layer = key;
       picker.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      const bus = key === "transit";
+      document.getElementById("bus-context").hidden = !bus;
+      if (!bus && stops.checked) { stops.checked = false; stopLayer.remove(); }
       renderAll();
     });
     picker.append(b);
   }
-  document.getElementById("day-type").addEventListener("change", (e) => { state.dayType = e.target.value; renderAll(); });
-  document.getElementById("stops-toggle").addEventListener("change", (e) => (e.target.checked ? stopLayer.addTo(map) : stopLayer.remove()));
+  const days = document.getElementById("day-picker");
+  days.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    state.dayType = b.dataset.day;
+    days.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    renderAll();
+  }));
+  const stops = document.getElementById("stops-toggle");
+  stops.addEventListener("change", () => (stops.checked ? stopLayer.addTo(map) : stopLayer.remove()));
   document.getElementById("clear-sel").addEventListener("click", () => select(null));
 
   const slider = document.getElementById("month");
