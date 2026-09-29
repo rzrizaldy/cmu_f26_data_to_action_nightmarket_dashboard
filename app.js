@@ -42,7 +42,7 @@ function tipNode(title, value, label) {
   return el("div", {}, el("div", { class: "tip-label", text: title }), el("div", { class: "tip-value", text: value }), label ? el("div", { class: "tip-label", text: label }) : null);
 }
 
-const DATA_VERSION = "2026-09-28"; // bump when dashboard/data changes, so browsers refetch
+const DATA_VERSION = "2026-09-28c"; // bump when dashboard/data changes, so browsers refetch
 const state = { month: 0, layer: "spend", dayType: "SAT.", hood: null, playing: null };
 let D; // all data
 
@@ -425,7 +425,6 @@ function lineChart(id, values, format, label) {
       Plot.ruleX([now], { stroke: C.ink, strokeOpacity: 0.35 }),
       Plot.lineY(data, { x: "date", y: "value", stroke: C.series, strokeWidth: 2, curve: "monotone-x" }),
       Plot.dot(markets, { x: "date", y: 0, r: 3.5, fill: C.pop, stroke: C.ink, strokeWidth: 1 }),
-      ...(id === "chart-spend" ? decemberNote(data) : []),
       Plot.ruleX(data, Plot.pointerX({ x: "date", stroke: C.muted })),
       Plot.tip(data, Plot.pointerX({
         x: "date", y: "value",
@@ -435,18 +434,6 @@ function lineChart(id, values, format, label) {
     ],
   });
   box.replaceChildren(plot);
-}
-
-// annotate the corrected month directly on the spending chart
-function decemberNote(data) {
-  const dec = data.find((d) => d.month === "2025-12");
-  if (!dec) return [];
-  const raw = !state.hood && D.spend.city_raw ? D.spend.city_raw[D.months.indexOf("2025-12")] : null;
-  const text = raw ? `Dec 2025 corrected\n(reported ${money(raw)})` : "Dec 2025 corrected";
-  return [
-    Plot.dot([dec], { x: "date", y: "value", r: 3, fill: C.surface, stroke: C.ink, strokeWidth: 1.2 }),
-    Plot.text([dec], { x: "date", y: "value", text: () => text, dy: -14, textAnchor: "end", dx: -4, fill: C.ink2, fontSize: 10.5, lineHeight: 1.15 }),
-  ];
 }
 
 function tableView(id, columns) {
