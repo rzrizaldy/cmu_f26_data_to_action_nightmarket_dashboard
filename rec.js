@@ -115,7 +115,7 @@ const Rec = (() => {
         Plot.dot(named, { x: "avg_lift", y: "visitors", r: (d) => (d.rec ? 8 : 4.5), fill: (d) => (d.rec ? C.pop : color(R.K)), stroke: C.ink, strokeWidth: 1 }),
         // hover a dot: which market combination it is
         Plot.tip(lines, Plot.pointer({ x: "avg_lift", y: "visitors", fill: C.surface, stroke: C.axis, fontSize: 12, lineHeight: 1.35, maxRadius: 30,
-          title: (d) => `${d.K} markets · ${full(d.visitors)} visitors · ${signed(d.avg_lift)} lift\n${d.mix.map(([id, n]) => `${nice(P[id])}${n > 1 ? ` ×${n}` : ""}`).join("\n")}` })),
+          title: (d) => `${d.K} markets · ${full(d.visitors)} visitors · ${signed(d.avg_lift)} lift\n${d.mix.map(([id, n]) => `${nice(P[id])}${n > 1 ? ` ×${n}` : ""}${P[id].host ? " · held a market before" : ""}`).join("\n")}` })),
         Plot.text(atStart ? [] : [recPt], { x: "avg_lift", y: "visitors", text: (d) => `${GOAL[d.goal].name} (recommended)\n${short(d.visitors)} · ${signed(d.avg_lift)}`,
           textAnchor: "start", lineAnchor: "top", dx: 10, dy: 8, fill: C.ink, fontWeight: 700, lineHeight: 1.25, stroke: C.surface, strokeWidth: 4, paintOrder: "stroke" }),
       ],
@@ -149,7 +149,7 @@ const Rec = (() => {
     }).addTo(map);
     for (const [id, n] of Object.entries(count)) {
       const p = P[id];
-      const icon = L.divIcon({ className: "", html: `<div class="pin"><span>${order[id]}</span>${n > 1 ? `<em>×${n}</em>` : ""}</div>`, iconSize: [28, 28], iconAnchor: [14, 14] });
+      const icon = L.divIcon({ className: "", html: `<div class="pin${p.host ? " was" : ""}"><span>${order[id]}</span>${n > 1 ? `<em>×${n}</em>` : ""}</div>`, iconSize: [28, 28], iconAnchor: [14, 14] });
       L.marker([p.lat, p.lon], { icon, keyboard: false, interactive: false }).addTo(map);
     }
     const fit = () => { map.invalidateSize(); map.fitBounds(layer.getBounds(), { padding: [8, 8] }); };
@@ -160,8 +160,9 @@ const Rec = (() => {
       const p = P[id], dates = S.picks.filter(([q]) => q === id).map(([, t]) => dayLabel(O.season[t]));
       const add = S.picks.filter(([q]) => q === id).reduce((a, [, , v]) => a + v, 0);
       return el("li", {},
-        el("span", { class: "s-pin", text: String(order[id]) }),
-        el("span", { class: "s-name" }, nice(p), el("span", { class: "s-meta", text: `${dates.join(", ")} · ${p.area}` })),
+        el("span", { class: `s-pin${p.host ? " was" : ""}`, text: String(order[id]) }),
+        el("span", { class: "s-name" }, nice(p), p.host ? el("span", { class: "was-tag", title: p.host, text: "held a market before" }) : null,
+          el("span", { class: "s-meta", text: `${dates.join(", ")} · ${p.area}` })),
         el("span", { class: "s-val" }, signed(Math.max(0, p.lift)), el("span", { class: "s-meta", text: `≈${short(add)} visitors` })));
     });
     document.getElementById("rec-schedule").replaceChildren(...rows);

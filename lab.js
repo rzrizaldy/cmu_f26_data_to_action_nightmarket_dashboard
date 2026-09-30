@@ -111,7 +111,7 @@ const Lab = (() => {
       const p = P[id];
       const focused = S.focus === id;
       ringLayer.addLayer(L.circle([p.lat, p.lon], { radius: S.r * 1000, color: C.ink, weight: focused ? 1.6 : 1, dashArray: "4 5", fill: false, opacity: focused ? 0.9 : 0.45, interactive: false }));
-      const icon = L.divIcon({ className: "", html: `<div class="pin${focused ? " on" : ""}"><span>${order[id]}</span>${n > 1 ? `<em>×${n}</em>` : ""}</div>`, iconSize: [28, 28], iconAnchor: [14, 14] });
+      const icon = L.divIcon({ className: "", html: `<div class="pin${focused ? " on" : ""}${p.host ? " was" : ""}"><span>${order[id]}</span>${n > 1 ? `<em>×${n}</em>` : ""}</div>`, iconSize: [28, 28], iconAnchor: [14, 14] });
       const m = L.marker([p.lat, p.lon], { icon, keyboard: false, riseOnHover: true }).addTo(pinLayer);
       m.bindTooltip(() => tip(p), { direction: "top", offset: [0, -12] });
       m.on("click", () => setFocus(S.focus === id ? null : id));
@@ -137,6 +137,7 @@ const Lab = (() => {
       el("div", { class: "legend-labels" }, el("span", { text: lo }), el("span", { text: hi })),
       el("div", { class: "legend-extra" },
         el("span", {}, el("i", { class: "swatch-pin" }), "picked (number = order)"),
+        el("span", {}, el("i", { class: "swatch-pin was" }), "held a market before"),
         el("span", {}, el("i", { class: "swatch-ring" }), `${S.r} km zone, kept clear for 3 weeks`),
         el("span", {}, el("i", { class: "swatch-nodata" }), "not considered")),
     );
@@ -216,8 +217,9 @@ const Lab = (() => {
       const p = P[id];
       const li = el("li", { class: S.focus === id ? "on" : "", tabindex: "0" },
         el("span", { class: "s-date", text: dayLabel(t) }),
-        el("span", { class: "s-pin", text: String(order[id]) }),
-        el("span", { class: "s-name" }, niceName(p), el("span", { class: "s-meta", text: `${p.area}${p.host ? " · past host" : ""}${/north_shore/.test(id) ? " · crowd includes stadium game days" : ""}` })),
+        el("span", { class: `s-pin${p.host ? " was" : ""}`, text: String(order[id]) }),
+        el("span", { class: "s-name" }, niceName(p), p.host ? el("span", { class: "was-tag", title: p.host, text: "held a market before" }) : null,
+          el("span", { class: "s-meta", text: `${p.area}${/north_shore/.test(id) ? " · crowd includes stadium game days" : ""}` })),
         el("span", { class: "s-val" }, `+${Math.round(Math.max(0, p.lift) * 100)}%`, el("span", { class: "s-meta", text: `≈${short(gain)} visitors` })));
       const go = () => setFocus(S.focus === id ? null : id);
       li.addEventListener("click", go);

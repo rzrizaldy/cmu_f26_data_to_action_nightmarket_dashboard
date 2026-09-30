@@ -379,6 +379,13 @@ main {
 .pin em { position: absolute; left: 22px; top: -8px; font: 700 11px/1 var(--font); font-style: normal; background: var(--ink); color: var(--paper); border-radius: 999px; padding: 3px 5px; }
 .pin.on, .pin.hover { transform: scale(1.25); box-shadow: 0 0 0 2px var(--ink), 0 0 0 7px rgba(255, 211, 107, 0.7); }
 .swatch-pin { background: var(--lantern); box-shadow: 0 0 0 1.5px var(--ink); }
+/* past hosts picked again: a blue ring on the pin and a tag in the schedule */
+.pin.was { box-shadow: 0 0 0 2px var(--ink), 0 0 0 4.5px var(--paper), 0 0 0 7px var(--series); }
+.pin.was.on, .pin.was.hover { box-shadow: 0 0 0 2px var(--ink), 0 0 0 4.5px var(--paper), 0 0 0 7px var(--series), 0 0 0 12px rgba(255, 211, 107, 0.7); }
+.legend-extra i.swatch-pin.was { margin: 0 9px 0 4px; }
+.swatch-pin.was, .key-was, .s-pin.was { box-shadow: 0 0 0 1.5px var(--ink), 0 0 0 3px var(--paper), 0 0 0 4.5px var(--series); }
+.key-was { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--lantern); margin: 0 4px 0 6px; vertical-align: 0; }
+.was-tag { display: inline-block; margin-left: 7px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--series); color: var(--series-deep); font-size: 11px; font-weight: 700; line-height: 1.5; vertical-align: 1px; white-space: nowrap; }
 .swatch-ring { background: none; border: 1.5px dashed var(--ink); width: 12px !important; height: 12px !important; }
 
 .goal-bars { display: grid; gap: 6px; }
