@@ -277,7 +277,6 @@ const Lab = (() => {
     seg("lab-k", "K", O.grid.K, String);
     seg("lab-goal", "goal", O.grid.goal, (g) => GOALS[g].label);
     seg("lab-r", "r", O.grid.r, (r) => `${r} km`);
-    seg("lab-d", "D", O.grid.D, String);
   }
   function set(key, v) {
     S[key] = v;

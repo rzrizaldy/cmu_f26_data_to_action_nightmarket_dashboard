@@ -42,7 +42,7 @@ function tipNode(title, value, label) {
   return el("div", {}, el("div", { class: "tip-label", text: title }), el("div", { class: "tip-value", text: value }), label ? el("div", { class: "tip-label", text: label }) : null);
 }
 
-const DATA_VERSION = "2026-09-30a"; // bump when dashboard/data changes, so browsers refetch
+const DATA_VERSION = "2026-09-30c"; // bump when dashboard/data changes, so browsers refetch
 const state = { month: 0, layer: "spend", dayType: "SAT.", hood: null, playing: null };
 let D; // all data
 
