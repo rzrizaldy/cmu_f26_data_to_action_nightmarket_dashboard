@@ -9,7 +9,8 @@ Made by Dominick, Nate, Rizaldy and Sean for **CMU From Data to Action, Fall 202
 ## What's here
 
 - **Explore:** a neighborhood map with a layer picker (spending, footfall, evening footfall, bus traffic, population density), market pins, and a month timeline drawn as a string of lights. Beside it, trends and rankings for the city or the neighborhood you click.
-- **Optimization lab** and **Recommendation:** still being built. They will show the optimization model and its recommended neighborhoods and dates.
+- **Optimization lab:** choose a budget, a goal (most visitors, a balance, or biggest lift), how far apart markets must be and how many city areas to reach. The map shows which areas the model picks for summer 2027 Saturdays, with the schedule, the rules it follows and why. Every setting was solved in advance with Gurobi, so switching is instant.
+- **Recommendation:** still being built. It will show which picks hold up when the assumptions change.
 
 ## Data
 
@@ -20,6 +21,7 @@ Made by Dominick, Nate, Rizaldy and Sean for **CMU From Data to Action, Fall 202
 - WPRDC neighborhood boundaries
 - UCSUR *Profiles of Change 2014–2024* (ACS 5-year) population
 - A researched inventory of night markets scheduled in the city, 2023–2026
+- The team's model outputs: predicted evening lift per area and the solved schedules (`data/optimization.json`)
 
 Market pins sit at the middle of each neighborhood, not at the exact venue. Basemap © Esri.
 

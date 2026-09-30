@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="styles.css?v=2026-09-28c">
+  <link rel="stylesheet" href="styles.css?v=2026-09-30b">
   <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
 </head>
 <body>
@@ -104,10 +104,68 @@
       </div>
     </section>
 
-    <section id="tab-lab" class="tab-panel wip" role="tabpanel" aria-labelledby="tab-btn-lab" hidden>
-      <img class="wip-art" src="assets/wip-lab.svg" alt="A market stall beside a planning table with a river map, bus route, and setup barriers." width="340" height="212">
-      <h2>The optimization lab is still being built</h2>
-      <p>You'll be able to pick the neighborhoods, districts or months you care about and re-run the model to see where markets should go.</p>
+    <section id="tab-lab" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-lab" hidden>
+      <div class="filters sentence">
+        <div class="sentence-line">
+        <span class="filter-label" id="k-label">Plan</span>
+        <div class="segmented" id="lab-k" role="group" aria-labelledby="k-label"></div>
+        <span class="filter-label" id="goal-label">markets for summer 2027, aiming for</span>
+        <div class="segmented" id="lab-goal" role="group" aria-labelledby="goal-label"></div>
+        </div>
+        <div class="sentence-line">
+        <span class="filter-label" id="r-label">Keep markets</span>
+        <div class="segmented" id="lab-r" role="group" aria-labelledby="r-label"></div>
+        <span class="filter-label" id="d-label">apart for 3 weeks, and reach</span>
+        <div class="segmented" id="lab-d" role="group" aria-labelledby="d-label"></div>
+        <span class="filter-label">of the 5 city areas.</span>
+        </div>
+      </div>
+
+      <div class="explore-grid">
+        <div class="map-col">
+          <div class="map-frame">
+            <div id="lab-map" aria-label="Map of the neighborhoods the model picks"></div>
+            <div class="legend" id="lab-legend"></div>
+          </div>
+          <div class="timeline lab-timeline">
+            <span class="season-tag">27 Saturdays</span>
+            <div class="lights"><svg id="lab-lights" role="img" aria-label="Saturdays from May to October 2027; lit ones have a market"></svg></div>
+            <output id="lab-date" aria-live="polite">2027</output>
+          </div>
+        </div>
+
+        <aside class="panel">
+          <section class="block selection">
+            <p class="kicker">The model's schedule</p>
+            <h2 class="big-number"><span id="lab-total"></span> <small>more evening visitors</small></h2>
+            <p class="lede" id="lab-lede"></p>
+            <dl class="stats" id="lab-stats"></dl>
+          </section>
+
+          <section class="block">
+            <h3>Same rules, other goals</h3>
+            <p class="sub">Added evening visitors if the model aimed for something else. Tap one to switch.</p>
+            <div id="lab-goals" class="goal-bars"></div>
+          </section>
+
+          <section class="block">
+            <h3>The schedule</h3>
+            <p class="sub">In date order. Added visitors = predicted lift × a typical Saturday evening there in that month.</p>
+            <ol class="schedule" id="lab-schedule"></ol>
+          </section>
+
+          <section class="block">
+            <h3>How the model picks</h3>
+            <ol class="steps">
+              <li><b>Predict the lift.</b> Past markets in 7 host neighborhoods raised evening footfall by −15% to +54%. A ridge regression links that lift to population, businesses, bus stops and spending, and predicts it everywhere else.</li>
+              <li><b>Turn lift into people.</b> Lift × the neighborhood's usual Saturday evening crowd gives added visitors per market.</li>
+              <li><b>Pick the best schedule that follows the rules.</b> Gurobi searches every neighborhood–Saturday combination and proves no better schedule exists.</li>
+            </ol>
+            <ul class="rules" id="lab-rules"></ul>
+            <p class="note" id="lab-solver"></p>
+          </section>
+        </aside>
+      </div>
     </section>
 
     <section id="tab-results" class="tab-panel wip" role="tabpanel" aria-labelledby="tab-btn-results" hidden>
@@ -127,6 +185,7 @@
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
-  <script src="app.js?v=2026-09-28c"></script>
+  <script src="app.js?v=2026-09-30b"></script>
+  <script src="lab.js?v=2026-09-30b"></script>
 </body>
 </html>

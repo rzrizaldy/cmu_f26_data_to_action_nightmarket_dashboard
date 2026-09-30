@@ -42,7 +42,7 @@ function tipNode(title, value, label) {
   return el("div", {}, el("div", { class: "tip-label", text: title }), el("div", { class: "tip-value", text: value }), label ? el("div", { class: "tip-label", text: label }) : null);
 }
 
-const DATA_VERSION = "2026-09-28c"; // bump when dashboard/data changes, so browsers refetch
+const DATA_VERSION = "2026-09-30a"; // bump when dashboard/data changes, so browsers refetch
 const state = { month: 0, layer: "spend", dayType: "SAT.", hood: null, playing: null };
 let D; // all data
 
@@ -576,6 +576,12 @@ function select(h) {
   renderAll();
 }
 
+const DEK = {
+  explore: "Spending, footfall and bus traffic by neighborhood, with every night market scheduled since 2023. Drag the string of lights to move through the months.",
+  lab: "Set a budget, a goal and the ground rules. The model picks the neighborhoods and Saturdays for next summer's markets and shows why.",
+  results: "Which picks hold up when the assumptions change.",
+};
+
 function initControls() {
   const picker = document.getElementById("layer-picker");
   for (const [key, layer] of Object.entries(LAYERS)) {
@@ -634,6 +640,9 @@ function initControls() {
       document.getElementById(x.getAttribute("aria-controls")).hidden = !on;
     });
     if (t.dataset.tab === "explore") map.invalidateSize();
+    document.getElementById("dek").textContent = DEK[t.dataset.tab];
+    if (t.dataset.tab === "lab") Lab.show().catch((err) => console.error(err));
+    history.replaceState(null, "", t.dataset.tab === "explore" ? location.pathname : `#${t.dataset.tab}`);
   }));
 
 
@@ -657,6 +666,8 @@ load()
     initControls();
     renderFooter();
     renderAll();
+    const deep = /^#[a-z]+$/.test(location.hash) && document.querySelector(`[role="tab"][data-tab="${location.hash.slice(1)}"]`);
+    if (deep) deep.click();
   })
   .catch((err) => {
     document.querySelector("main").prepend(el("p", { class: "card", text: `Could not load the dashboard data (${err.message}).` }));
