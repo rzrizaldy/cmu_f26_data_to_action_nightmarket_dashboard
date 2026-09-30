@@ -42,7 +42,7 @@ function tipNode(title, value, label) {
   return el("div", {}, el("div", { class: "tip-label", text: title }), el("div", { class: "tip-value", text: value }), label ? el("div", { class: "tip-label", text: label }) : null);
 }
 
-const DATA_VERSION = "2026-09-30c"; // bump when dashboard/data changes, so browsers refetch
+const DATA_VERSION = "2026-09-30d"; // bump when dashboard/data changes, so browsers refetch
 const state = { month: 0, layer: "spend", dayType: "SAT.", hood: null, playing: null };
 let D; // all data
 
@@ -579,7 +579,7 @@ function select(h) {
 const DEK = {
   explore: "Spending, footfall and bus traffic by neighborhood, with every night market scheduled since 2023. Drag the string of lights to move through the months.",
   lab: "Set a budget, a goal and the ground rules. The model picks the neighborhoods and Saturdays for next summer's markets and shows why.",
-  results: "Which picks hold up when the assumptions change.",
+  results: "What the model says Pittsburgh should do next summer, and how sure we can be.",
 };
 
 function initControls() {
@@ -642,6 +642,7 @@ function initControls() {
     if (t.dataset.tab === "explore") map.invalidateSize();
     document.getElementById("dek").textContent = DEK[t.dataset.tab];
     if (t.dataset.tab === "lab") Lab.show().catch((err) => console.error(err));
+    if (t.dataset.tab === "results") Rec.show().catch((err) => console.error(err));
     history.replaceState(null, "", t.dataset.tab === "explore" ? location.pathname : `#${t.dataset.tab}`);
   }));
 

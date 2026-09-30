@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="styles.css?v=2026-09-30c">
+  <link rel="stylesheet" href="styles.css?v=2026-09-30g">
   <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
 </head>
 <body>
@@ -166,10 +166,51 @@
       </div>
     </section>
 
-    <section id="tab-results" class="tab-panel wip" role="tabpanel" aria-labelledby="tab-btn-results" hidden>
-      <img class="wip-art" src="assets/wip-results.svg" alt="A market stall beneath a map pin with a blank shortlist, covered sign, and traffic cone." width="340" height="212">
-      <h2>The recommendation comes after the model runs</h2>
-      <p>This tab will show which neighborhoods and dates the model picks, and how often they stay picked when the assumptions change.</p>
+    <section id="tab-results" class="tab-panel brief" role="tabpanel" aria-labelledby="tab-btn-results" hidden>
+      <article class="brief-col">
+        <p class="kicker">Recommendation · draft for city review</p>
+        <h2 class="brief-head">Spread next summer's 12 night markets across six neighborhoods, and run the season as a test</h2>
+        <p class="brief-dek" id="rec-dek"></p>
+
+        <h3 class="brief-h">Markets don't lift every neighborhood</h3>
+        <p id="rec-p1"></p>
+        <figure class="brief-fig">
+          <figcaption><b>Change in evening footfall on market days</b> compared with the same area on similar days. Lines show the 95% range.</figcaption>
+          <div id="rec-hosts" class="chart"></div>
+        </figure>
+
+        <h3 class="brief-h">The goal decides the map</h3>
+        <p id="rec-p2"></p>
+        <figure class="brief-fig">
+          <figcaption><b>Every point is a best-possible 12-market schedule</b>, solved with Gurobi. Moving right gives more weight to percent lift, less to crowd size.</figcaption>
+          <div id="rec-frontier" class="chart"></div>
+        </figure>
+
+        <h3 class="brief-h">The recommended season</h3>
+        <p id="rec-p3"></p>
+      </article>
+
+      <div class="brief-wide">
+        <div class="map-frame"><div id="rec-map" aria-label="Map of the recommended market neighborhoods"></div></div>
+        <div>
+          <p class="note rec-key">Numbered by first date. Predicted lift, and added evening visitors over that area's dates.</p>
+          <ol class="schedule rec-schedule" id="rec-schedule"></ol>
+        </div>
+      </div>
+
+      <article class="brief-col">
+        <h3 class="brief-h">What the city should do</h3>
+        <ol class="brief-actions" id="rec-actions"></ol>
+
+        <h3 class="brief-h">What could change this</h3>
+        <ul class="brief-risks">
+          <li><b>Seven past hosts is a small base.</b> Every predicted lift rests on them, so treat each number as a range, not a promise.</li>
+          <li><b>Past dates were scheduled, not confirmed.</b> A cancelled market counted as held would pull its measured lift toward zero.</li>
+          <li><b>Footfall comes from a phone panel.</b> It counts a sample of visitors, and the panel changed in October 2025.</li>
+          <li><b>Twelve areas were left out</b> because they look unlike any past host. The model can't say whether a market would work there.</li>
+        </ul>
+        <p class="note" id="rec-source"></p>
+      </article>
     </section>
   </main>
 
@@ -183,7 +224,8 @@
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
-  <script src="app.js?v=2026-09-30c"></script>
-  <script src="lab.js?v=2026-09-30c"></script>
+  <script src="app.js?v=2026-09-30g"></script>
+  <script src="lab.js?v=2026-09-30g"></script>
+  <script src="rec.js?v=2026-09-30g"></script>
 </body>
 </html>
