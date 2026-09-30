@@ -88,7 +88,9 @@ const Rec = (() => {
     // repeated weights can land on the same schedule; keep one point per distinct schedule outcome
     const curve = (k) => R.frontiers[k].filter((f, i, a) => i === 0 || f.visitors !== a[i - 1].visitors || f.avg_lift !== a[i - 1].avg_lift);
     const lines = Ks.flatMap((k) => curve(k).map((f) => ({ ...f, K: k })));
-    const color = (k) => (k === R.K ? C.series : C.ramp[Math.min(6, Math.max(1, Math.round((k / Math.max(...Ks)) * 6)))]);
+    // budget spend: green (small) to red (large)
+    const ramp = d3.interpolateRgbBasis([css("--budget-low"), css("--budget-mid"), css("--budget-high")]);
+    const color = (k) => ramp(Ks.length > 1 ? (k - Ks[0]) / (Ks[Ks.length - 1] - Ks[0]) : 0.5);
     const starts = Ks.map((k) => ({ ...curve(k)[0], K: k }));
     const F = R.frontier;
     const named = [
@@ -107,11 +109,10 @@ const Rec = (() => {
       marks: [
         ...Ks.map((k) => Plot.line(lines.filter((d) => d.K === k), { x: "avg_lift", y: "visitors", stroke: color(k), strokeWidth: k === R.K ? 3 : 1.6 })),
         Plot.dot(lines, { x: "avg_lift", y: "visitors", r: 2.5, fill: C.surface, stroke: (d) => color(d.K), strokeWidth: 1.3 }),
-        Plot.text(starts.filter((d) => d.K !== R.K), { x: "avg_lift", y: "visitors", text: (d) => `${d.K} markets`, textAnchor: "end", dx: -8, fill: C.ink2 }),
         // when the recommendation is the left end of its line, the line label carries it
         Plot.text(starts.filter((d) => d.K === R.K), { x: "avg_lift", y: "visitors", text: (d) => (atStart ? `${d.K} markets\nrecommended\n${short(d.visitors)} · ${signed(d.avg_lift)}` : `${d.K} markets`),
           textAnchor: "end", lineAnchor: "middle", dx: -12, fill: C.ink, fontWeight: 700, lineHeight: 1.25, stroke: C.surface, strokeWidth: 4, paintOrder: "stroke" }),
-        Plot.dot(named, { x: "avg_lift", y: "visitors", r: (d) => (d.rec ? 8 : 4.5), fill: (d) => (d.rec ? C.pop : C.series), stroke: C.ink, strokeWidth: 1,
+        Plot.dot(named, { x: "avg_lift", y: "visitors", r: (d) => (d.rec ? 8 : 4.5), fill: (d) => (d.rec ? C.pop : color(R.K)), stroke: C.ink, strokeWidth: 1,
           title: (d) => `${GOAL[d.goal].name}, ${R.K} markets: ${full(d.visitors)} visitors, average lift ${signed(d.avg_lift)}` }),
         Plot.text(atStart ? [] : [recPt], { x: "avg_lift", y: "visitors", text: (d) => `${GOAL[d.goal].name} (recommended)\n${short(d.visitors)} · ${signed(d.avg_lift)}`,
           textAnchor: "start", lineAnchor: "top", dx: 10, dy: 8, fill: C.ink, fontWeight: 700, lineHeight: 1.25, stroke: C.surface, strokeWidth: 4, paintOrder: "stroke" }),
@@ -121,7 +122,11 @@ const Rec = (() => {
     const tip = "As Caulkins said: the smiley is the ideal corner, and it is usually infeasible.";
     const smiley = el("span", { class: "smiley", tabindex: "0", role: "img", "aria-label": tip });
     smiley.innerHTML = `<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="var(--lantern)" stroke="var(--ink)" stroke-width="1.5"/><circle cx="8.5" cy="9.5" r="1.4" fill="var(--ink)"/><circle cx="15.5" cy="9.5" r="1.4" fill="var(--ink)"/><path d="M7.5 14.2c1.1 1.9 2.7 2.8 4.5 2.8s3.4-.9 4.5-2.8" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/></svg><span class="smiley-tip">${tip}</span>`;
-    box.replaceChildren(plot, smiley);
+    const legend = el("div", { class: "budget-legend", role: "list", "aria-label": "Budget spend" },
+      el("span", { class: "bl-title", text: "Budget spend" }),
+      ...Ks.map((k) => { const sw = el("i"); sw.style.background = color(k); if (k === R.K) sw.classList.add("rec");
+        return el("span", { role: "listitem" }, sw, `${k} markets`); }));
+    box.replaceChildren(legend, plot, smiley);
   }
 
   function mapAndSchedule() {

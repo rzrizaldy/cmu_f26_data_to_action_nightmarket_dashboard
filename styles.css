@@ -15,6 +15,9 @@
   --lantern-glow: #ffd36b;
   --nodata: #eef0f3;
   --good: #1b7f4e;
+  --budget-low: #2a9d5c;
+  --budget-mid: #e3a21a;
+  --budget-high: #d0342c;
   --bad: #b3261e;
   --ramp-1: #cde2fb;
   --ramp-2: #9ec5f4;
@@ -313,7 +316,11 @@ main {
 .brief-eq { margin: 6px 0 16px; padding: 10px 14px; background: var(--wash); border-radius: 6px; overflow-x: auto; color: var(--ink); }
 .brief-eq .katex-display { margin: 0; }
 #rec-frontier { position: relative; }
-.smiley { position: absolute; top: 22px; right: 18px; line-height: 0; cursor: help; border-radius: 50%; }
+.budget-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 2px 0 6px; font-size: 12.5px; color: var(--ink-2); }
+.budget-legend .bl-title { font-weight: 700; color: var(--ink); }
+.budget-legend i { display: inline-block; width: 18px; height: 4px; border-radius: 2px; margin-right: 6px; vertical-align: 3px; }
+.budget-legend i.rec { height: 6px; vertical-align: 2px; }
+.smiley { position: absolute; top: 50px; right: 18px; line-height: 0; cursor: help; border-radius: 50%; }
 .smiley svg { transition: transform 0.2s ease; }
 .smiley:hover svg, .smiley:focus-visible svg { transform: rotate(-12deg) scale(1.15); }
 .smiley-tip {
