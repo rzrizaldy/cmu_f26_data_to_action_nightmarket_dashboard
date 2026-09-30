@@ -112,8 +112,10 @@ const Rec = (() => {
         // when the recommendation is the left end of its line, the line label carries it
         Plot.text(starts.filter((d) => d.K === R.K), { x: "avg_lift", y: "visitors", text: (d) => (atStart ? `${d.K} markets\nrecommended\n${short(d.visitors)} · ${signed(d.avg_lift)}` : `${d.K} markets`),
           textAnchor: "end", lineAnchor: "middle", dx: -12, fill: C.ink, fontWeight: 700, lineHeight: 1.25, stroke: C.surface, strokeWidth: 4, paintOrder: "stroke" }),
-        Plot.dot(named, { x: "avg_lift", y: "visitors", r: (d) => (d.rec ? 8 : 4.5), fill: (d) => (d.rec ? C.pop : color(R.K)), stroke: C.ink, strokeWidth: 1,
-          title: (d) => `${GOAL[d.goal].name}, ${R.K} markets: ${full(d.visitors)} visitors, average lift ${signed(d.avg_lift)}` }),
+        Plot.dot(named, { x: "avg_lift", y: "visitors", r: (d) => (d.rec ? 8 : 4.5), fill: (d) => (d.rec ? C.pop : color(R.K)), stroke: C.ink, strokeWidth: 1 }),
+        // hover a dot: which market combination it is
+        Plot.tip(lines, Plot.pointer({ x: "avg_lift", y: "visitors", fill: C.surface, stroke: C.axis, fontSize: 12, lineHeight: 1.35, maxRadius: 30,
+          title: (d) => `${d.K} markets · ${full(d.visitors)} visitors · ${signed(d.avg_lift)} lift\n${d.mix.map(([id, n]) => `${nice(P[id])}${n > 1 ? ` ×${n}` : ""}`).join("\n")}` })),
         Plot.text(atStart ? [] : [recPt], { x: "avg_lift", y: "visitors", text: (d) => `${GOAL[d.goal].name} (recommended)\n${short(d.visitors)} · ${signed(d.avg_lift)}`,
           textAnchor: "start", lineAnchor: "top", dx: 10, dy: 8, fill: C.ink, fontWeight: 700, lineHeight: 1.25, stroke: C.surface, strokeWidth: 4, paintOrder: "stroke" }),
       ],
