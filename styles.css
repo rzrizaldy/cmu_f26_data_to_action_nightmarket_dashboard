@@ -323,6 +323,15 @@ main {
 
 /* optimization lab: the controls read as one sentence */
 .sentence { flex-direction: column; align-items: flex-start; gap: 8px; }
+.rec-toggle {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 2px;
+  border: 1px solid var(--ink); border-radius: 999px; background: var(--paper); color: var(--ink);
+  padding: 6px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+}
+.rec-toggle:hover { background: var(--wash); }
+.rec-toggle .rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 1.5px var(--ink); }
+.rec-toggle[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.rec-toggle[aria-pressed="true"] .rec-dot { background: var(--lantern); box-shadow: 0 0 0 1.5px var(--paper); }
 .sentence-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
 .sentence .filter-label { color: var(--ink); font-size: 14.5px; }
 #lab-map { height: clamp(400px, calc(100vh - 380px), 720px); background: var(--wash); }
@@ -388,7 +397,19 @@ main {
 .r-mark { font-weight: 800; color: var(--good); }
 .rules li.bad .r-mark { color: var(--bad); }
 
+/* festive strings of lights: bulbs sway from the wire, lit ones twinkle */
+#lights .hang, #lab-lights .hang { animation: sway 3.2s ease-in-out infinite; animation-delay: var(--d, 0s); }
+#lights .bulb.lit, #lab-lights .bulb.lit { animation: twinkle 2.4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+#lights .halo, #lab-lights .halo { animation: glowpulse 1.6s ease-in-out infinite; }
+@keyframes sway { 0%, 100% { transform: rotate(-11deg); } 50% { transform: rotate(11deg); } }
+@keyframes twinkle {
+  0%, 100% { fill-opacity: 1; filter: drop-shadow(0 0 2px var(--lantern-glow)); }
+  50% { fill-opacity: 0.65; filter: drop-shadow(0 0 0 transparent); }
+}
+@keyframes glowpulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.75; } }
+
 @media (prefers-reduced-motion: reduce) {
+  #lights .hang, #lab-lights .hang, #lights .bulb.lit, #lab-lights .bulb.lit, #lights .halo, #lab-lights .halo { animation: none; }
   .pin { transition: none; }
   .market-on { animation: none; }
 }

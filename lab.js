@@ -158,12 +158,14 @@ const Lab = (() => {
     O.season.forEach((date, i) => {
       const cx = x(i), wy = wireY(i), cy = wy + 9, p = at[i];
       const on = p && S.focus === p;
-      parts.push(node("line", { class: "drop", x1: cx, y1: wy, x2: cx, y2: cy - 3 }));
-      if (on) parts.push(node("circle", { class: "halo", cx, cy, r: 11 }));
+      const g = node("g", { class: "hang", style: `transform-origin:${cx}px ${wy}px;--d:${(-((performance.now() / 1000 + i * 0.37) % 3.2)).toFixed(2)}s` });
+      g.append(node("line", { class: "drop", x1: cx, y1: wy, x2: cx, y2: cy - 3 }));
+      if (on) g.append(node("circle", { class: "halo", cx, cy, r: 11 }));
       const b = node("circle", { class: `bulb${p ? " lit" : ""}`, cx, cy, r: p ? 5 : 3 });
       b.append(node("title", {}, p ? `${dayLabel(i)}: ${niceName(P[p])}` : `${dayLabel(i)}: no market`));
       if (p) { b.style.cursor = "pointer"; b.addEventListener("click", () => setFocus(S.focus === p ? null : p)); }
-      parts.push(b);
+      g.append(b);
+      parts.push(g);
       if (+date.slice(8, 10) <= 7) parts.push(node("text", { class: "year", x: cx, y: 62, "text-anchor": i === 0 ? "start" : "middle" }, MONTH_NAMES[+date.slice(5, 7) - 1]));
     });
     svg.setAttribute("viewBox", `0 0 ${W} 70`);
@@ -273,12 +275,32 @@ const Lab = (() => {
       return b;
     }));
   }
+  const KEYS = ["goal", "K", "r", "D"];
+  const isRec = () => KEYS.every((k) => S[k] === O.recommendation[k]);
+  let before = null; // settings to go back to when the recommendation toggle is turned off
   function renderControls() {
     seg("lab-k", "K", O.grid.K, String);
     seg("lab-goal", "goal", O.grid.goal, (g) => GOALS[g].label);
     seg("lab-r", "r", O.grid.r, (r) => `${r} km`);
+    const on = isRec();
+    document.getElementById("lab-rec").setAttribute("aria-pressed", String(on));
+    document.getElementById("lab-rec-label").textContent = on ? (before ? "Recommended plan · tap to go back" : "Showing the recommended plan") : "Show the recommended plan";
+  }
+  function toggleRec() {
+    if (isRec()) {
+      if (!before) return;
+      Object.assign(S, before);
+      before = null;
+    } else {
+      before = Object.fromEntries(KEYS.map((k) => [k, S[k]]));
+      KEYS.forEach((k) => { S[k] = O.recommendation[k]; });
+    }
+    _counts = null;
+    if (S.focus && !counts()[S.focus]) S.focus = null;
+    render();
   }
   function set(key, v) {
+    before = null;
     S[key] = v;
     _counts = null;
     if (S.focus && !counts()[S.focus]) S.focus = null;
@@ -306,6 +328,7 @@ const Lab = (() => {
     P = Object.fromEntries(O.profiles.map((p) => [p.id, p]));
     for (const p of O.profiles) for (const h of p.neighborhoods) byHood[h] = p;
     Object.assign(S, O.default);
+    document.getElementById("lab-rec").addEventListener("click", toggleRec);
     initMap();
     render();
     let t;

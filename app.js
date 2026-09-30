@@ -536,10 +536,13 @@ function renderLights() {
     const cx = x(i), wy = wireY(i), cy = wy + 9;
     const lit = withMarkets.has(m);
     const current = i === state.month;
-    parts.push(node("line", { class: "drop", x1: cx, y1: wy, x2: cx, y2: cy - 3 }));
-    if (current && lit) parts.push(node("circle", { class: "halo", cx, cy, r: 11 }));
-    parts.push(node("circle", { class: `bulb${lit ? " lit" : ""}`, cx, cy, r: lit ? 4.5 : 3 }));
-    if (current) parts.push(node("circle", { class: "cursor", cx, cy, r: 8 }));
+    // each bulb hangs from the wire and sways on its own beat (see .hang in styles.css)
+    const g = node("g", { class: "hang", style: `transform-origin:${cx}px ${wy}px;--d:${(-((performance.now() / 1000 + i * 0.37) % 3.2)).toFixed(2)}s` });
+    g.append(node("line", { class: "drop", x1: cx, y1: wy, x2: cx, y2: cy - 3 }));
+    if (current && lit) g.append(node("circle", { class: "halo", cx, cy, r: 11 }));
+    g.append(node("circle", { class: `bulb${lit ? " lit" : ""}`, cx, cy, r: lit ? 4.5 : 3 }));
+    if (current) g.append(node("circle", { class: "cursor", cx, cy, r: 8 }));
+    parts.push(g);
     if (m.endsWith("-01")) { const t = node("text", { class: "year", x: cx, y: 62, "text-anchor": i === 0 ? "start" : "middle" }); t.textContent = m.slice(0, 4); parts.push(t); }
   });
   svg.setAttribute("viewBox", `0 0 ${W} 70`);
