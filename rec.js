@@ -9,29 +9,41 @@ const Rec = (() => {
   const dayLabel = (d) => `${MONTH_NAMES[+d.slice(5, 7) - 1]} ${+d.slice(8, 10)}`;
   const plotStyle = () => ({ fontFamily: css("--font"), fontSize: "12px", color: C.ink2, background: "transparent", overflow: "visible" });
 
+  const W = { visitors: 0, balanced: 0.5, lift: 1 };
+  const GOAL = {
+    visitors: { name: "Most visitors", head: (n, k) => `Put next summer's ${k} night markets where Saturday crowds are biggest, and run the season as a test` },
+    balanced: { name: "Balanced", head: (n, k) => `Spread next summer's ${k} night markets across ${n} neighborhoods, and run the season as a test` },
+    lift: { name: "Biggest lift", head: (n, k) => `Put next summer's ${k} night markets where evenings are quietest, and run the season as a test` },
+  };
+
   function text() {
-    const F = R.frontier, top = F[0], bal = F.find((f) => f.w_lift === 0.5), low = F[F.length - 1];
+    const F = R.frontier, top = F[0], low = F[F.length - 1], rec = F.find((f) => f.w_lift === W[R.goal]), bal = F.find((f) => f.w_lift === 0.5);
     const ids = [...new Set(S.picks.map(([p]) => p))];
     const areas = new Set(ids.map((id) => P[id].area));
     const hosts = R.hosts.slice().sort((a, b) => b.lift - a.lift);
     const up = hosts.filter((h) => h.low > 0.2), down = hosts.filter((h) => h.high < 0);
     const stable = ids.filter((id) => (R.robust[id] || 0) >= 0.99).length;
 
-    document.getElementById("rec-dek").textContent =
-      `Night markets help some neighborhoods much more than others. A schedule that gives equal weight to crowd size and to lift keeps ${Math.round((bal.visitors / top.visitors) * 100)}% of the most visitors the city could draw, and roughly doubles the typical lift, from ${signed(top.avg_lift)} to ${signed(bal.avg_lift)}.`;
+    document.getElementById("rec-head").textContent = GOAL[R.goal].head(words(ids.length), S.picks.length);
+    document.getElementById("rec-dek").textContent = R.goal === "visitors"
+      ? `A market lifts a quiet street by a bigger percentage, but it adds the most people where crowds are already large. Aiming for the most added evening visitors, the model picks ${words(ids.length)} neighborhoods that together draw about ${full(Math.round(S.added_visitors / 100) * 100)} more people over the season, ${Math.round(((top.visitors - bal.visitors) / bal.visitors) * 100)}% more than a schedule balanced toward lift.`
+      : `Night markets help some neighborhoods much more than others. This schedule keeps ${Math.round((rec.visitors / top.visitors) * 100)}% of the most visitors the city could draw, with a typical lift of ${signed(rec.avg_lift)} against ${signed(top.avg_lift)} when aiming for visitors alone.`;
     document.getElementById("rec-p1").textContent =
       `Past markets changed evening footfall by anywhere from ${signed(hosts[hosts.length - 1].lift)} to ${signed(hosts[0].lift)}. ${listJoin(up.map((h) => h.name))} drew about half again their usual Saturday evening crowd. In ${listJoin(down.map((h) => h.name))}, already among the city's busiest evening areas, footfall was lower than on comparable days. Across the seven hosts, lift was larger where there are fewer businesses and less spending.`;
     document.getElementById("rec-p2").textContent =
-      `Aim only for the most visitors and the model sends markets to big crowds, where a market adds people but barely changes the evening (${signed(top.avg_lift)} on average). Aim only for lift and it picks quiet corners, where a market matters more but draws ${({ 1: "about a quarter", 2: "about half", 3: "about three quarters" })[Math.round((low.visitors / top.visitors) * 4)] ?? "far fewer"} as many people. The curve bends in the middle: until then each step toward lift costs few visitors, and after it visitors fall off fast.`;
+      `Aim only for the most visitors and the model sends markets to big crowds, where a market adds many people but changes the evening less (${signed(top.avg_lift)} on average). Aim only for lift and it picks quiet corners, where a market matters more but draws ${({ 1: "about a quarter", 2: "about half", 3: "about three quarters" })[Math.round((low.visitors / top.visitors) * 4)] ?? "far fewer"} as many people. ${R.goal === "visitors" ? "We recommend the first: it brings the most new people to the markets and the shops around them, and a big percentage in a small area adds few of them." : ""}`;
     document.getElementById("rec-p3").textContent =
-      `Twelve Saturdays, May to October 2027, in ${words(ids.length)} neighborhoods across ${words(areas.size)} of the city's five areas: about ${full(Math.round(S.added_visitors / 100) * 100)} more evening visitors in total, with an average lift of ${signed(bal.avg_lift)}. ${stable === ids.length ? `The same ${words(ids.length)} neighborhoods come up` : `${cap(words(stable))} of the ${words(ids.length)} come up`} under every budget (6 to 16 markets) and spacing rule (1 to 3 km) we tested.`;
+      `Twelve Saturdays, May to October 2027, in ${words(ids.length)} neighborhoods across ${words(areas.size)} of the city's five areas: about ${full(Math.round(S.added_visitors / 100) * 100)} more evening visitors in total, with an average lift of ${signed(rec.avg_lift)}. ${stable === ids.length ? `The same ${words(ids.length)} neighborhoods come up` : `${cap(words(stable))} of the ${words(ids.length)} come up`} under every budget (6 to 16 markets) and spacing rule (1 to 3 km) we tested.`;
 
     const pastHosts = ids.filter((id) => R.hosts.some((h) => h.id === id)).map((id) => R.hosts.find((h) => h.id === id));
     const actions = [
       `<b>Back ${S.picks.length} Saturday markets</b> in ${listJoin(ids.map((id) => nice(P[id])))}, May through October 2027.`,
-      ...pastHosts.map((h) => `<b>Keep ${h.name}.</b> It is the only recommended site with a track record: its past markets raised evening footfall by ${signed(h.lift)} (range ${signed(h.low)} to ${signed(h.high)}).`),
+      ...pastHosts.map((h) => `<b>${h.name} is the one pick with a track record.</b> Its past markets raised evening footfall by ${signed(h.lift)} (range ${signed(h.low)} to ${signed(h.high)}), so its 2027 markets are the best check on the model.`),
       `<b>Run the season as a test.</b> Count footfall and card spending at each market against similar Saturdays, keep a few eligible dates without a market for comparison, and refit the model before planning 2028.`,
-      ...(ids.some((id) => /north_shore/.test(id)) ? [`<b>Check stadium schedules before booking North Shore.</b> Its Saturday crowds include Steelers and Pirates game days, which likely inflate its estimate.`] : []),
+      ...ids.filter((id) => /north_shore/.test(id)).map((id) => {
+        const share = S.picks.filter(([q]) => q === id).reduce((a, [, , v]) => a + v, 0) / S.added_visitors;
+        return `<b>Check stadium schedules before booking North Shore.</b> It supplies ${Math.round(share * 100)}% of the season's added visitors, and its Saturday crowds include Steelers and Pirates game days, which likely inflate that estimate.`;
+      }),
       `<b>Ask each neighborhood's business association before fixing dates.</b> The model sees footfall, not whether vendors and residents want a market.`,
     ];
     document.getElementById("rec-actions").innerHTML = actions.map((a) => `<li>${a}</li>`).join("");
@@ -65,10 +77,10 @@ const Rec = (() => {
     const box = document.getElementById("rec-frontier");
     const F = R.frontier;
     const named = [
-      { ...F[0], label: "Most visitors", anchor: "start", line: "bottom", dx: 2, dy: -10 },
-      { ...F.find((f) => f.w_lift === 0.5), label: "Balanced (recommended)", anchor: "end", line: "top", dx: -10, dy: 10, rec: true },
-      { ...F[F.length - 1], label: "Biggest lift", anchor: "end", line: "middle", dx: -12, dy: 0 },
-    ];
+      { ...F[0], goal: "visitors", anchor: "start", line: "bottom", dx: 2, dy: -10 },
+      { ...F.find((f) => f.w_lift === 0.5), goal: "balanced", anchor: "end", line: "top", dx: -10, dy: 10 },
+      { ...F[F.length - 1], goal: "lift", anchor: "end", line: "middle", dx: -12, dy: 0 },
+    ].map((d) => ({ ...d, rec: d.goal === R.goal, label: GOAL[d.goal].name + (d.goal === R.goal ? " (recommended)" : "") }));
     box.replaceChildren(Plot.plot({
       width: Math.max(300, box.clientWidth), height: 280,
       marginLeft: 50, marginRight: 24, marginTop: 34, marginBottom: 40,
