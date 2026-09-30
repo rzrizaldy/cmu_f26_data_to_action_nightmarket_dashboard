@@ -309,6 +309,10 @@ main {
 .schedule.rec-schedule li:hover { background: none; }
 .brief-actions { margin: 0; padding-left: 22px; display: grid; gap: 10px; font-size: 16px; line-height: 1.55; }
 .brief-actions b, .brief-risks b { color: var(--ink); }
+.brief-h .step { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 8px; border-radius: 50%; background: var(--ink); color: var(--paper); font-size: 13px; font-stretch: 100%; vertical-align: 2px; }
+.brief-eq { margin: 6px 0 16px; padding: 10px 14px; background: var(--wash); border-radius: 6px; overflow-x: auto; color: var(--ink); }
+.brief-eq .katex-display { margin: 0; }
+.brief-rules { font-size: 14px !important; color: var(--ink-2) !important; }
 .brief-risks { margin: 0 0 16px; padding-left: 18px; display: grid; gap: 8px; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
 
 /* work-in-progress tabs */

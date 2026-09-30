@@ -9,7 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="styles.css?v=2026-09-30i">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="stylesheet" href="styles.css?v=2026-09-30j">
   <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
 </head>
 <body>
@@ -172,22 +173,18 @@
         <h2 class="brief-head" id="rec-head"></h2>
         <p class="brief-dek" id="rec-dek"></p>
 
-        <h3 class="brief-h">Markets don't lift every neighborhood</h3>
+        <h3 class="brief-h"><span class="step">1</span>Predict: how much would a market lift each area?</h3>
         <p id="rec-p1"></p>
+        <div class="brief-eq" id="rec-eq1"></div>
         <figure class="brief-fig">
-          <figcaption><b>Change in evening footfall on market days</b> compared with the same area on similar days. Lines show the 95% range.</figcaption>
+          <figcaption><b>Past markets: change in evening footfall</b> against the same area on similar days. Lines show the 95% range.</figcaption>
           <div id="rec-hosts" class="chart"></div>
         </figure>
 
-        <h3 class="brief-h">The goal decides the map</h3>
+        <h3 class="brief-h"><span class="step">2</span>Optimize: choose the Saturdays and places</h3>
         <p id="rec-p2"></p>
-        <figure class="brief-fig">
-          <figcaption><b>Every point is a best-possible 12-market schedule</b>, solved with Gurobi. Moving right gives more weight to percent lift, less to crowd size.</figcaption>
-          <div id="rec-frontier" class="chart"></div>
-        </figure>
-
-        <h3 class="brief-h">The recommended season</h3>
-        <p id="rec-p3"></p>
+        <div class="brief-eq" id="rec-eq2"></div>
+        <p class="brief-rules">Rules: 12 markets, one a night · at most 3 per neighborhood · none within 2 km of another inside 3 weeks · at least 6 neighborhoods in 4 of the 5 city areas.</p>
       </article>
 
       <div class="brief-wide">
@@ -199,15 +196,23 @@
       </div>
 
       <article class="brief-col">
+        <p id="rec-p3"></p>
+
+        <h3 class="brief-h"><span class="step">3</span>Decide: the goal is a policy choice</h3>
+        <p id="rec-p4"></p>
+        <figure class="brief-fig">
+          <figcaption><b>Each point is a best-possible 12-market schedule.</b> Moving right weights percent lift more, crowd size less.</figcaption>
+          <div id="rec-frontier" class="chart"></div>
+        </figure>
+
         <h3 class="brief-h">What the city should do</h3>
         <ol class="brief-actions" id="rec-actions"></ol>
 
-        <h3 class="brief-h">What could change this</h3>
+        <h3 class="brief-h">How sure are we</h3>
         <ul class="brief-risks">
-          <li><b>Seven past hosts is a small base.</b> Every predicted lift rests on them, so treat each number as a range, not a promise.</li>
-          <li><b>Past dates were scheduled, not confirmed.</b> A cancelled market counted as held would pull its measured lift toward zero.</li>
-          <li><b>Footfall comes from a phone panel.</b> It counts a sample of visitors, and the panel changed in October 2025.</li>
-          <li><b>Twelve areas were left out</b> because they look unlike any past host. The model can't say whether a market would work there.</li>
+          <li><b>Seven past hosts is a small base.</b> Read every number as a range, not a promise.</li>
+          <li><b>Past dates were scheduled, not confirmed.</b> A cancelled market counted as held would understate its lift.</li>
+          <li><b>Footfall is a phone-panel sample</b> whose panel changed in October 2025, and 12 areas unlike any past host were left out.</li>
         </ul>
         <p class="note" id="rec-source"></p>
       </article>
@@ -224,8 +229,9 @@
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6"></script>
-  <script src="app.js?v=2026-09-30i"></script>
-  <script src="lab.js?v=2026-09-30i"></script>
-  <script src="rec.js?v=2026-09-30i"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="app.js?v=2026-09-30j"></script>
+  <script src="lab.js?v=2026-09-30j"></script>
+  <script src="rec.js?v=2026-09-30j"></script>
 </body>
 </html>

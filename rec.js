@@ -11,44 +11,53 @@ const Rec = (() => {
 
   const W = { visitors: 0, balanced: 0.5, lift: 1 };
   const GOAL = {
-    visitors: { name: "Most visitors", head: (n, k) => `Put next summer's ${k} night markets where Saturday crowds are biggest, and run the season as a test` },
-    balanced: { name: "Balanced", head: (n, k) => `Spread next summer's ${k} night markets across ${n} neighborhoods, and run the season as a test` },
-    lift: { name: "Biggest lift", head: (n, k) => `Put next summer's ${k} night markets where evenings are quietest, and run the season as a test` },
+    visitors: { name: "Most visitors", head: (n, k) => `Put next summer's ${k} night markets where Saturday crowds are biggest, and run the season as a test`,
+      why: "We chose visitors: it brings the most new customers to the markets and the shops around them." },
+    balanced: { name: "Balanced", head: (n, k) => `Spread next summer's ${k} night markets across ${n} neighborhoods, and run the season as a test`,
+      why: "We chose the balance: it keeps most of the visitors while doubling the typical lift." },
+    lift: { name: "Biggest lift", head: (n, k) => `Put next summer's ${k} night markets where evenings are quietest, and run the season as a test`,
+      why: "We chose lift: a market matters most where evenings are quiet." },
   };
+  function eq(id, tex) {
+    const node = document.getElementById(id);
+    if (window.katex) katex.render(tex, node, { displayMode: true, throwOnError: false });
+    else node.textContent = tex;
+  }
 
   function text() {
-    const F = R.frontier, top = F[0], low = F[F.length - 1], rec = F.find((f) => f.w_lift === W[R.goal]), bal = F.find((f) => f.w_lift === 0.5);
+    const F = R.frontier, top = F[0], low = F[F.length - 1], rec = F.find((f) => f.w_lift === W[R.goal]);
     const ids = [...new Set(S.picks.map(([p]) => p))];
-    const areas = new Set(ids.map((id) => P[id].area));
     const hosts = R.hosts.slice().sort((a, b) => b.lift - a.lift);
-    const up = hosts.filter((h) => h.low > 0.2), down = hosts.filter((h) => h.high < 0);
+    const down = hosts.filter((h) => h.high < 0);
     const stable = ids.filter((id) => (R.robust[id] || 0) >= 0.99).length;
+    const total = full(Math.round(S.added_visitors / 100) * 100);
 
     document.getElementById("rec-head").textContent = GOAL[R.goal].head(words(ids.length), S.picks.length);
-    document.getElementById("rec-dek").textContent = R.goal === "visitors"
-      ? `A market lifts a quiet street by a bigger percentage, but it adds the most people where crowds are already large. Aiming for the most added evening visitors, the model picks ${words(ids.length)} neighborhoods that together draw about ${full(Math.round(S.added_visitors / 100) * 100)} more people over the season, ${Math.round(((top.visitors - bal.visitors) / bal.visitors) * 100)}% more than a schedule balanced toward lift.`
-      : `Night markets help some neighborhoods much more than others. This schedule keeps ${Math.round((rec.visitors / top.visitors) * 100)}% of the most visitors the city could draw, with a typical lift of ${signed(rec.avg_lift)} against ${signed(top.avg_lift)} when aiming for visitors alone.`;
+    document.getElementById("rec-dek").textContent =
+      `We first predicted how much a night market lifts evening footfall in each neighborhood, then let an optimizer choose where and when to hold them. Its answer: ${words(ids.length)} neighborhoods, ${S.picks.length} Saturdays, about ${total} more evening visitors.`;
     document.getElementById("rec-p1").textContent =
-      `Past markets changed evening footfall by anywhere from ${signed(hosts[hosts.length - 1].lift)} to ${signed(hosts[0].lift)}. ${listJoin(up.map((h) => h.name))} drew about half again their usual Saturday evening crowd. In ${listJoin(down.map((h) => h.name))}, already among the city's busiest evening areas, footfall was lower than on comparable days. Across the seven hosts, lift was larger where there are fewer businesses and less spending.`;
+      `Seven neighborhoods have hosted markets. Evening footfall rose as much as ${signed(hosts[0].lift)} (${hosts[0].name}) and fell where evenings are already busy (${listJoin(down.map((h) => `${h.name} ${signed(h.lift)}`))}). A regression on those seven explains the gap: lift is larger where there are fewer businesses and less spending. That gives every other neighborhood a predicted lift, which we turn into people:`;
+    eq("rec-eq1", String.raw`\text{added visitors}_{p,t} \;=\; \underbrace{\left(e^{\hat\theta_p}-1\right)}_{\text{predicted lift}} \;\times\; \underbrace{\bar y_{p,t}}_{\text{usual Saturday evening crowd}}`);
     document.getElementById("rec-p2").textContent =
-      `Aim only for the most visitors and the model sends markets to big crowds, where a market adds many people but changes the evening less (${signed(top.avg_lift)} on average). Aim only for lift and it picks quiet corners, where a market matters more but draws ${({ 1: "about a quarter", 2: "about half", 3: "about three quarters" })[Math.round((low.visitors / top.visitors) * 4)] ?? "far fewer"} as many people. ${R.goal === "visitors" ? "We recommend the first: it brings the most new people to the markets and the shops around them, and a big percentage in a small area adds few of them." : ""}`;
+      `The prediction is only an input. The decision is the schedule: for each neighborhood p and Saturday t, hold a market (x = 1) or not (x = 0). The optimizer picks the schedule with the most added visitors that still follows the city's rules.`;
+    eq("rec-eq2", String.raw`\max_{x}\;\sum_{p,\,t}\ \text{added visitors}_{p,t}\cdot x_{p,t}, \qquad x_{p,t}\in\{0,1\}`);
     document.getElementById("rec-p3").textContent =
-      `Twelve Saturdays, May to October 2027, in ${words(ids.length)} neighborhoods across ${words(areas.size)} of the city's five areas: about ${full(Math.round(S.added_visitors / 100) * 100)} more evening visitors in total, with an average lift of ${signed(rec.avg_lift)}. ${stable === ids.length ? `The same ${words(ids.length)} neighborhoods come up` : `${cap(words(stable))} of the ${words(ids.length)} come up`} under every budget (6 to 16 markets) and spacing rule (1 to 3 km) we tested.`;
+      `Gurobi proves no better schedule exists under these rules. ${stable === ids.length ? `The same ${words(ids.length)} neighborhoods win` : `${cap(words(stable))} of the ${words(ids.length)} neighborhoods win`} under every budget from 6 to 16 markets and every spacing from 1 to 3 km, so the answer doesn't hinge on those settings.`;
+    document.getElementById("rec-p4").textContent =
+      `Aiming for visitors favors big crowds with a modest lift (${signed(top.avg_lift)}). Aiming for percent lift favors quiet corners (${signed(low.avg_lift)}) that draw ${({ 1: "about a quarter", 2: "about half", 3: "about three quarters" })[Math.round((low.visitors / top.visitors) * 4)] ?? "far fewer"} as many people. Same data, same rules, different maps: the objective is a value judgment, not a technical detail. ${GOAL[R.goal].why}`;
 
-    const pastHosts = ids.filter((id) => R.hosts.some((h) => h.id === id)).map((id) => R.hosts.find((h) => h.id === id));
     const actions = [
-      `<b>Back ${S.picks.length} Saturday markets</b> in ${listJoin(ids.map((id) => nice(P[id])))}, May through October 2027.`,
-      ...pastHosts.map((h) => `<b>${h.name} is the one pick with a track record.</b> Its past markets raised evening footfall by ${signed(h.lift)} (range ${signed(h.low)} to ${signed(h.high)}), so its 2027 markets are the best check on the model.`),
-      `<b>Run the season as a test.</b> Count footfall and card spending at each market against similar Saturdays, keep a few eligible dates without a market for comparison, and refit the model before planning 2028.`,
+      `<b>Fund ${S.picks.length} Saturday markets</b> in ${listJoin(ids.map((id) => nice(P[id])))}, May to October 2027.`,
+      `<b>Run 2027 as a pilot, not a final answer.</b> Measure each market against similar Saturdays, leave a few eligible dates without one for comparison, and update the lift estimates before 2028. Each season makes the next prediction better.`,
       ...ids.filter((id) => /north_shore/.test(id)).map((id) => {
         const share = S.picks.filter(([q]) => q === id).reduce((a, [, , v]) => a + v, 0) / S.added_visitors;
-        return `<b>Check stadium schedules before booking North Shore.</b> It supplies ${Math.round(share * 100)}% of the season's added visitors, and its Saturday crowds include Steelers and Pirates game days, which likely inflate that estimate.`;
+        return `<b>Check the biggest bet first.</b> North Shore supplies ${Math.round(share * 100)}% of the expected visitors, and its Saturday crowds include Steelers and Pirates games. Confirm its numbers without game days before booking.`;
       }),
       `<b>Ask each neighborhood's business association before fixing dates.</b> The model sees footfall, not whether vendors and residents want a market.`,
     ];
     document.getElementById("rec-actions").innerHTML = actions.map((a) => `<li>${a}</li>`).join("");
     document.getElementById("rec-source").textContent =
-      `Sources: Dewey footfall and card spend (licensed; shown only as totals), Pittsburgh Regional Transit, UCSUR population profiles, and the team's inventory of past markets. Lift estimates from notebook 03, schedules from notebook 04 (${O.solver.name}). Estimates are rough; see "What could change this".`;
+      `Sources: Dewey footfall and card spend (licensed; shown only as totals), Pittsburgh Regional Transit, UCSUR population profiles, and the team's inventory of past markets. Prediction: notebook 03 (fixed-effects lift per host, ridge regression across areas). Optimization: notebook 04 (${O.solver.name}).`;
   }
   const words = (n) => (["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"][n] ?? String(n));
   const cap = (s) => s[0].toUpperCase() + s.slice(1);
