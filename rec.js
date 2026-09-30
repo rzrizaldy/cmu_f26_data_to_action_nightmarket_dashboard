@@ -84,28 +84,44 @@ const Rec = (() => {
 
   function frontierChart() {
     const box = document.getElementById("rec-frontier");
+    const Ks = Object.keys(R.frontiers).map(Number).sort((a, b) => a - b);
+    // repeated weights can land on the same schedule; keep one point per distinct schedule outcome
+    const curve = (k) => R.frontiers[k].filter((f, i, a) => i === 0 || f.visitors !== a[i - 1].visitors || f.avg_lift !== a[i - 1].avg_lift);
+    const lines = Ks.flatMap((k) => curve(k).map((f) => ({ ...f, K: k })));
+    const color = (k) => (k === R.K ? C.series : C.ramp[Math.min(6, Math.max(1, Math.round((k / Math.max(...Ks)) * 6)))]);
+    const starts = Ks.map((k) => ({ ...curve(k)[0], K: k }));
     const F = R.frontier;
     const named = [
-      { ...F[0], goal: "visitors", anchor: "start", line: "bottom", dx: 2, dy: -10 },
-      { ...F.find((f) => f.w_lift === 0.5), goal: "balanced", anchor: "end", line: "top", dx: -10, dy: 10 },
-      { ...F[F.length - 1], goal: "lift", anchor: "end", line: "middle", dx: -12, dy: 0 },
-    ].map((d) => ({ ...d, rec: d.goal === R.goal, label: GOAL[d.goal].name + (d.goal === R.goal ? " (recommended)" : "") }));
-    box.replaceChildren(Plot.plot({
-      width: Math.max(300, box.clientWidth), height: 280,
+      { ...F[0], goal: "visitors" },
+      { ...F.find((f) => f.w_lift === 0.5), goal: "balanced" },
+      { ...F[F.length - 1], goal: "lift" },
+    ].map((d) => ({ ...d, rec: d.goal === R.goal }));
+    const recPt = named.find((d) => d.rec), atStart = R.goal === "visitors";
+    const xs = lines.map((d) => d.avg_lift), ymax = Math.max(...lines.map((d) => d.visitors));
+    const plot = Plot.plot({
+      width: Math.max(300, box.clientWidth), height: 320,
       marginLeft: 50, marginRight: 24, marginTop: 34, marginBottom: 40,
       style: plotStyle(),
-      x: { label: "Average lift per market →", tickFormat: (d) => signed(d), ticks: 5, grid: true },
-      y: { label: "↑ Added evening visitors", tickFormat: (d) => short(d), ticks: 5, grid: true, domain: [0, Math.max(...F.map((f) => f.visitors)) * 1.18] },
+      x: { label: "Average lift per market →", tickFormat: (d) => signed(d), ticks: 5, grid: true, domain: [Math.min(...xs) - 0.09, Math.max(...xs) + 0.01] },
+      y: { label: "↑ Added evening visitors", tickFormat: (d) => short(d), ticks: 5, grid: true, domain: [0, ymax * 1.12] },
       marks: [
-        Plot.line(F, { x: "avg_lift", y: "visitors", stroke: C.series, strokeWidth: 2 }),
-        Plot.dot(F, { x: "avg_lift", y: "visitors", r: 3, fill: C.surface, stroke: C.series, strokeWidth: 1.5 }),
-        Plot.dot(named, { x: "avg_lift", y: "visitors", r: (d) => (d.rec ? 8 : 5), fill: (d) => (d.rec ? C.pop : C.series), stroke: C.ink, strokeWidth: 1 }),
-        // Plot takes anchor and offsets as constants, so each label is its own mark
-        ...named.map((d) => Plot.text([d], { x: "avg_lift", y: "visitors", text: (d) => `${d.label}\n${short(d.visitors)} · ${signed(d.avg_lift)}`,
-          textAnchor: d.anchor, lineAnchor: d.line, dx: d.dx, dy: d.dy, fill: C.ink, fontWeight: d.rec ? 700 : 500, lineHeight: 1.25,
-          stroke: C.surface, strokeWidth: 4, paintOrder: "stroke" })),
+        ...Ks.map((k) => Plot.line(lines.filter((d) => d.K === k), { x: "avg_lift", y: "visitors", stroke: color(k), strokeWidth: k === R.K ? 3 : 1.6 })),
+        Plot.dot(lines, { x: "avg_lift", y: "visitors", r: 2.5, fill: C.surface, stroke: (d) => color(d.K), strokeWidth: 1.3 }),
+        Plot.text(starts.filter((d) => d.K !== R.K), { x: "avg_lift", y: "visitors", text: (d) => `${d.K} markets`, textAnchor: "end", dx: -8, fill: C.ink2 }),
+        // when the recommendation is the left end of its line, the line label carries it
+        Plot.text(starts.filter((d) => d.K === R.K), { x: "avg_lift", y: "visitors", text: (d) => (atStart ? `${d.K} markets\nrecommended\n${short(d.visitors)} · ${signed(d.avg_lift)}` : `${d.K} markets`),
+          textAnchor: "end", lineAnchor: "middle", dx: -12, fill: C.ink, fontWeight: 700, lineHeight: 1.25, stroke: C.surface, strokeWidth: 4, paintOrder: "stroke" }),
+        Plot.dot(named, { x: "avg_lift", y: "visitors", r: (d) => (d.rec ? 8 : 4.5), fill: (d) => (d.rec ? C.pop : C.series), stroke: C.ink, strokeWidth: 1,
+          title: (d) => `${GOAL[d.goal].name}, ${R.K} markets: ${full(d.visitors)} visitors, average lift ${signed(d.avg_lift)}` }),
+        Plot.text(atStart ? [] : [recPt], { x: "avg_lift", y: "visitors", text: (d) => `${GOAL[d.goal].name} (recommended)\n${short(d.visitors)} · ${signed(d.avg_lift)}`,
+          textAnchor: "start", lineAnchor: "top", dx: 10, dy: 8, fill: C.ink, fontWeight: 700, lineHeight: 1.25, stroke: C.surface, strokeWidth: 4, paintOrder: "stroke" }),
       ],
-    }));
+    });
+    // Caulkins' convention: a smiley marks the ideal corner of a trade-off plot (here: more visitors AND more lift)
+    const tip = "As Caulkins said: the smiley is the ideal corner, and it is usually infeasible.";
+    const smiley = el("span", { class: "smiley", tabindex: "0", role: "img", "aria-label": tip });
+    smiley.innerHTML = `<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="var(--lantern)" stroke="var(--ink)" stroke-width="1.5"/><circle cx="8.5" cy="9.5" r="1.4" fill="var(--ink)"/><circle cx="15.5" cy="9.5" r="1.4" fill="var(--ink)"/><path d="M7.5 14.2c1.1 1.9 2.7 2.8 4.5 2.8s3.4-.9 4.5-2.8" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/></svg><span class="smiley-tip">${tip}</span>`;
+    box.replaceChildren(plot, smiley);
   }
 
   function mapAndSchedule() {
