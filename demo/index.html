@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Night market optimizer</title>
+  <meta name="description" content="A self-playing walk through how the team chose where and when Pittsburgh's 2027 night markets should go.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="stylesheet" href="demo.css?v=2026-10-03g">
+  <link rel="icon" href="../assets/mark.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="stage">
+    <header class="top">
+      <p class="byline">
+        <img class="mark" src="../assets/mark.svg" alt="" width="26" height="26">
+        <span><strong>Where should Pittsburgh's next night markets go?</strong> <span class="team">Dominick, Nate, Rizaldy and Sean</span></span>
+      </p>
+      <div class="deck-nav">
+        <ol class="flow" id="flow" aria-label="Demo steps: predict, optimize, decide"></ol>
+        <div class="controls">
+          <button type="button" id="prev" aria-label="Previous step"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 3 5.5 8l5 5"/></svg></button>
+          <button type="button" id="toggle" aria-label="Pause"><svg viewBox="0 0 16 16" aria-hidden="true"><path id="toggle-icon" d="M5 3v10M11 3v10"/></svg></button>
+          <button type="button" id="next" aria-label="Next step"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m5.5 3 5 5-5 5"/></svg></button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="map-frame">
+        <div id="map" aria-label="Map of Pittsburgh neighborhoods"></div>
+        <div class="legend" id="legend" hidden></div>
+      </div>
+      <section class="story" id="story" aria-live="polite">
+        <p class="step-no" id="step-no"></p>
+        <h1 id="headline"></h1>
+        <p class="caption" id="caption"></p>
+        <div class="fig" id="fig"></div>
+      </section>
+    </main>
+
+    <footer class="season">
+      <div class="lights"><svg id="lights" role="img" aria-label="The 27 Saturdays from May to October 2027; lit ones have a market"></svg></div>
+      <output id="lights-note" aria-live="polite"></output>
+    </footer>
+  </div>
+  <div class="start" id="start" role="dialog" aria-labelledby="start-title" hidden>
+    <div class="start-card">
+      <h2 id="start-title">How an optimizer picks Pittsburgh's 2027 night markets</h2>
+      <p>A two-minute walk through the model. It plays by itself, so you can talk over it.</p>
+      <ol class="start-flow">
+        <li><b>Predict</b>How much a market lifts evening footfall in each neighborhood. Summarized in one step.</li>
+        <li class="focus"><b>Optimize</b>The MILP: variables, constraints, and Gurobi choosing the schedule.</li>
+        <li><b>Decide</b>The trade-off between crowd size and lift, and the plan we recommend.</li>
+      </ol>
+      <div class="start-actions">
+        <button type="button" class="go" id="start-go">Start the demo</button>
+        <button type="button" class="alt" id="start-full">Start in full screen</button>
+      </div>
+      <p class="note">Space pauses, arrows or a clicker skip steps, R restarts, F toggles full screen.</p>
+    </div>
+  </div>
+  <p class="hint gone" id="hint">Space pauses · arrows skip · F full screen</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="demo.js?v=2026-10-03g"></script>
+</body>
+</html>
