@@ -441,6 +441,10 @@ main {
 
 .colophon { max-width: 1600px; margin: 0 auto; padding: 18px 28px 32px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--rule); }
 .colophon p { margin: 4px 0; max-width: 110ch; }
+/* presenter shortcut to demo/: a faint lantern, visible only to someone looking for it */
+.colophon { position: relative; }
+.demo-lantern { position: absolute; right: 28px; bottom: 30px; width: 12px; height: 12px; border-radius: 50%; background: var(--lantern); opacity: 0.18; transition: opacity 0.2s, box-shadow 0.2s; }
+.demo-lantern:hover, .demo-lantern:focus-visible { opacity: 1; box-shadow: 0 0 0 1.5px var(--ink), 0 0 12px 3px var(--lantern-glow); }
 
 @media (max-width: 1000px) {
   .masthead { grid-template-columns: minmax(0, 1fr); }

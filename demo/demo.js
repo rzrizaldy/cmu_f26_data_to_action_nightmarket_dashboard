@@ -1,7 +1,7 @@
 /* Hidden demo: a self-playing walk through Predict -> Optimize -> Decide, centred on the
    optimization. Not linked from the dashboard; open /demo/ from the lecture slides.
    Space pauses, arrows or a clicker skip steps, R restarts, F toggles full screen.
-   ?pace=1.5 makes every step 1.5x longer, ?step=3 opens at step 3, ?autoplay=1 skips the start screen.
+   It plays on load. ?pace=1.5 makes every step 1.5x longer; ?step=3 opens at step 3.
    Data: ../data/optimization.json (team-script/build_optimization_scenarios.py). */
 
 const qs = new URLSearchParams(location.search);
@@ -111,7 +111,7 @@ function go(i) {
 
 function setPlaying(on) {
   T.playing = on;
-  document.body.classList.toggle("paused", !on && $("start").hidden);
+  document.body.classList.toggle("paused", !on);
   $("toggle").setAttribute("aria-label", on ? "Pause" : "Play");
   $("toggle-icon").setAttribute("d", on ? "M5 3v10M11 3v10" : "M5 2.5v11l8.5-5.5z");
   $("hint").textContent = on ? "Space pauses · arrows skip · F full screen" : "Paused. Space to play";
@@ -539,7 +539,7 @@ function buildSteps() {
   ];
 }
 
-/* ---------- start ---------- */
+/* ---------- controls and start ---------- */
 function controls() {
   const phases = [...new Set(STEPS.map((s) => s.phase))];
   $("flow").replaceChildren(...phases.map((ph) => el("li", { "data-phase": ph },
@@ -552,16 +552,9 @@ function controls() {
   $("prev").addEventListener("click", () => go(T.i - 1));
   $("next").addEventListener("click", () => go(T.i + 1));
   $("toggle").addEventListener("click", () => setPlaying(!T.playing));
-  $("start-go").addEventListener("click", () => begin(false));
-  $("start-full").addEventListener("click", () => begin(true));
   document.addEventListener("keydown", (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     const k = e.key;
-    if (!$("start").hidden) {
-      if (e.target.closest?.("button")) return; // let the focused start button handle Enter and Space itself
-      if (k === "Enter" || k === " " || k === "ArrowRight" || k === "PageDown") { e.preventDefault(); begin(false); }
-      return;
-    }
     if (k === " " || k === "k" || k === "K") { e.preventDefault(); setPlaying(!T.playing); }
     else if (k === "ArrowRight" || k === "PageDown" || k === "ArrowDown") { e.preventDefault(); go(T.i + 1); }
     else if (k === "ArrowLeft" || k === "PageUp" || k === "ArrowUp") { e.preventDefault(); go(T.i - 1); }
@@ -577,16 +570,6 @@ function toggleFull() {
   if (document.fullscreenElement) document.exitFullscreen();
   else document.documentElement.requestFullscreen?.().catch(() => {});
 }
-const FIRST = () => Math.max(0, (+qs.get("step") || 1) - 1);
-function begin(fullscreen) {
-  if (fullscreen && !document.fullscreenElement) toggleFull();
-  $("start").classList.add("gone");
-  setTimeout(() => { $("start").hidden = true; }, 500);
-  go(FIRST());
-  setPlaying(true);
-  $("hint").classList.remove("gone");
-  setTimeout(() => $("hint").classList.add("gone"), 5000);
-}
 
 Promise.all(["optimization.json", "neighborhoods.geojson"].map((n) => fetch(`../data/${n}?v=${DATA_VERSION}`).then((r) => { if (!r.ok) throw new Error(`${n}: ${r.status}`); return r.json(); })))
   .then(([opt, geo]) => {
@@ -601,8 +584,9 @@ Promise.all(["optimization.json", "neighborhoods.geojson"].map((n) => fetch(`../
     drawLights();
     controls();
     requestAnimationFrame(frame);
-    if (qs.get("autoplay") === "1") begin(false);
-    else { $("start").hidden = false; go(FIRST()); setPlaying(false); $("start-go").focus(); }
+    go(Math.max(0, (+qs.get("step") || 1) - 1));
+    setPlaying(true);
+    setTimeout(() => $("hint").classList.add("gone"), 5000);
   })
   .catch((err) => {
     $("headline").textContent = "Could not load the demo data";
